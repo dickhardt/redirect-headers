@@ -143,26 +143,26 @@ This prevents redirect_uri manipulation attacks within the same origin.
 
 ### Without Redirect Headers (current OAuth)
 
-**Client initiates:**
+**Client Website returns to Browser:**
 ```http
 HTTP/1.1 302 Found
 Location: https://as.example/authorize?client_id=abc&state=123&redirect_uri=...
 ```
 
-**Browser navigates:**
+**Browser navigates, sends to AS:**
 ```http
 GET /authorize?client_id=abc&state=123&redirect_uri=...
 Host: as.example
 Referer: https://app.example/login  ← Unreliable, may be stripped
 ```
 
-**AS returns code:**
+**AS returns code to Browser:**
 ```http
 HTTP/1.1 302 Found
 Location: https://app.example/cb?code=SplxlOBe&state=123  ← Leaked in URL
 ```
 
-**Browser returns:**
+**Browser sends code to Client Website:**
 ```http
 GET /cb?code=SplxlOBe&state=123  ← In browser history, logs, analytics
 Host: app.example
@@ -177,7 +177,7 @@ Referer: https://as.example/consent  ← Third-party resources see code via Refe
 
 ### With Redirect Headers
 
-**Client initiates:**
+**Client Website returns to Browser:**
 ```http
 HTTP/1.1 302 Found
 Location: https://as.example/authorize?client_id=abc&state=123
@@ -185,7 +185,7 @@ Redirect-Query: "client_id=abc&state=123"
 Redirect-Path: "/app1/"
 ```
 
-**Browser adds origin and forwards:**
+**Browser navigates, adds origin and forwards to AS:**
 ```http
 GET /authorize?client_id=abc&state=123
 Host: as.example
@@ -194,14 +194,14 @@ Redirect-Path: "/app1/"
 Redirect-Query: "client_id=abc&state=123"
 ```
 
-**AS validates and returns:**
+**AS validates and returns to Browser:**
 ```http
 HTTP/1.1 302 Found
 Location: https://app.example/cb  ← No parameters in URL!
 Redirect-Query: "code=SplxlOBe&state=123"
 ```
 
-**Browser forwards back:**
+**Browser forwards back to Client Website:**
 ```http
 GET /cb  ← Clean URL
 Host: app.example
