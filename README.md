@@ -14,7 +14,9 @@ Redirect Headers move sensitive parameters from URLs to HTTP headers during brow
 
 **Why:** Authorization codes, tokens, and other sensitive data leak through URLs (browser history, Referer header, logs, analytics). Redirect Headers keep this data in headers that browsers control and don't expose to JavaScript or third parties.
 
-**Primary use case:** OAuth/OIDC flows, but works for any protocol using browser redirects (SAML, proprietary auth flows).
+**Primary use case:** Web server based OAuth/OIDC flows, but works for any protocol using browser redirects (SAML, proprietary auth flows). 
+
+SPA, inapp mobile browsers are out of scope of this proposal.
 
 ---
 
