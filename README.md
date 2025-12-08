@@ -1,6 +1,6 @@
 # Redirect Headers: Explainer Draft
 
-_Last updated: 2025-11-15_
+_Last updated: 2025-12-03_
 
 **Author:** Dick Hardt
 **Email:** dick.hardt@hello.coop
@@ -19,18 +19,21 @@ Redirect Headers move sensitive parameters from URLs to HTTP headers during brow
 ---
 
 ## Table of Contents
-1. Introduction
-2. Problems with Existing Redirect Mechanisms
-3. Redirect Headers
-   - 3.1 Redirect-Query
-   - 3.2 Redirect-Origin
-   - 3.3 Redirect-Path
-4. Use Cases
-5. OAuth Example: Before and After
-6. Security and Privacy Considerations
-7. Optimization: Omitting URL Parameters
-8. Implementation Status
-9. Related Documents
+1. [Introduction](#1-introduction)
+2. [Problems with Existing Redirect Mechanisms](#2-problems-with-existing-redirect-mechanisms)
+3. [Redirect Headers](#3-redirect-headers)
+   - [3.1 Redirect-Query](#31-redirect-query)
+   - [3.2 Redirect-Origin](#32-redirect-origin)
+   - [3.3 Redirect-Path](#33-redirect-path)
+4. [Use Cases](#4-use-cases)
+5. [OAuth Redirect Security Threats](#5-oauth-redirect-security-threats)
+6. [OAuth Example: Before and After](#6-oauth-example-before-and-after)
+7. [OAuth Incremental Deployment](#7-oauth-incremental-deployment)
+8. [Security and Privacy Considerations](#8-security-and-privacy-considerations)
+9. [Feature Discovery](#9-feature-discovery)
+10. [Implementation Status](#10-implementation-status)
+11. [Related Documents](#11-related-documents)
+12. [Acknowledgments](#12-acknowledgments)
 
 ## 1. Introduction
 
@@ -139,7 +142,48 @@ This prevents redirect_uri manipulation attacks within the same origin.
 
 ---
 
-## 5. OAuth Example: Before and After
+## 5. OAuth Redirect Security Threats
+
+**Scope:** Redirect Headers specifically addresses OAuth and OIDC web-based redirect flows between websites where sensitive parameters are passed via URL query strings. This proposal does NOT address form_post mechanisms where data appears in the DOM, as that attack vector requires different mitigations.
+
+### Authorization Code Theft from URL Query Strings
+
+The primary security weakness is in the **authorization server's response** containing the authorization code in the URL query string. When an AS redirects back to the client with `?code=...&state=...`, the authorization code is exposed through multiple vectors:
+
+**Known attack vectors:**
+
+1. **Browser history leakage** - Authorization codes stored in browser history can be retrieved by attackers with device access
+   - Reference: [OAuth 2.0 Security Best Current Practice](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics-29)
+
+2. **Server log exposure** - Authorization codes visible in web server access logs, proxy logs, and load balancer logs
+   - Codes can be extracted in real-time or from archived logs
+
+3. **Referer header leakage** - When the callback page loads third-party resources (images, scripts, analytics), the authorization code leaks via the Referer header
+   - Reference: [OAuth 2.0 authentication vulnerabilities](https://portswigger.net/web-security/oauth)
+
+4. **Browser-swapping attacks** - Attackers exploit scenarios where authorization codes leak through shared URLs or when users switch browsers during the flow
+   - Discussion: [OAuth-WG Browser-Swapping thread](http://www.mail-archive.com/oauth@ietf.org/msg25296.html)
+   - The core issue: "no technology to reliably verify that the user controlling the client is the same user who logs in to the AS/IdP"
+
+5. **URL sharing** - Users may inadvertently share URLs containing authorization codes after errors or confusion
+
+6. **Analytics and crash reporting** - Authorization codes captured by analytics systems, error tracking, and monitoring tools
+
+**What Redirect Headers mitigates:**
+
+By moving the authorization code from the URL query string to the `Redirect-Query` header, **all of these attack vectors are eliminated**. The authorization code never appears in:
+- URLs (no browser history exposure)
+- Referer headers (no leakage to third parties)
+- Server logs (when servers are configured to not log sensitive headers)
+- User-visible locations (no accidental sharing)
+
+**Important clarification:**
+
+The security concern is specifically the **authorization server's response** with the authorization code. The **client's authorization request** to the AS (containing `client_id`, `redirect_uri`, `state`) does not have known security concerns from being in the URL, as these parameters are not sensitive credentials. However, moving them to headers provides consistency and reduces URL clutter.
+
+---
+
+## 6. OAuth Example: Before and After
 
 ### Without Redirect Headers (current OAuth)
 
@@ -222,7 +266,50 @@ Redirect-Query: "code=SplxlOBe&state=123"  ← Not in URL, history, or Referer
 
 ---
 
-## 6. Security and Privacy Considerations
+## 7. OAuth Incremental Deployment
+
+Redirect Headers is designed for **incremental adoption** - each party (client, browser, authorization server) can independently add support, with functionality emerging when all parties support it.
+
+### How It Works
+
+**Clients** can start sending parameters in both locations:
+- URL query string (for backward compatibility)
+- `Redirect-Query` header (signaling support)
+
+**Browsers** forward `Redirect-` headers when present:
+- No special detection needed
+- Simply forward the headers during redirects
+
+**Authorization Servers** detect support and respond accordingly:
+- If request includes `Redirect-Query` → AS knows both client and browser support it
+- AS can then send response using **only** `Redirect-Query` header (no URL parameters)
+
+### Adoption Path
+
+Each party adds support independently, in any order:
+
+```
+Clients add support
+  ├─ Send params in URL + Redirect-Query
+  └─ Look for response in header, fall back to URL
+
+Browsers add support
+  ├─ Forward Redirect-* headers when present
+  └─ No configuration needed
+
+Authorization Servers add support
+  ├─ Detect support when Redirect-Query received
+  ├─ Confirm: client + browser both support it
+  └─ Send response ONLY in Redirect-Query (omit URL params)
+
+Result: Once all three support it → authorization code sent in header, not URL
+```
+
+**No coordination required** - each party adds support independently, and the system naturally converges to the secure behavior once all three support it. The client can immediately start sending both, browsers simply forward headers, and authorization servers detect support from incoming requests.
+
+---
+
+## 8. Security and Privacy Considerations
 
 **Security:**
 - Redirect-Query contains sensitive data - servers MUST treat as confidential
@@ -241,27 +328,36 @@ Redirect-Query: "code=SplxlOBe&state=123"  ← Not in URL, history, or Referer
 
 ---
 
-## 7. Optimization: Omitting URL Parameters
+## 9. Feature Discovery
 
-For backward compatibility, clients initially send parameters in both URL and Redirect-Query.
+Some protocols may wish to explicitly discover browser support for Redirect Headers before relying on them. While not required for security (backward compatibility ensures graceful fallback), feature discovery can optimize behavior.
 
-Once both browser and AS support is confirmed, clients MAY send parameters only in Redirect-Query.
+### Using Client Hints
 
-**Detection using Client Hints:**
+Servers can advertise support and request browser capabilities using Client Hints:
+
+**Server advertises support:**
 ```http
 Accept-CH: Redirect-Supported
 ```
 
-Browser responds:
+**Browser responds with capability:**
 ```http
 Redirect-Supported: ?1
 ```
 
-This optimization reduces URL length but isn't required for security benefits.
+### Optimization for OAuth
+
+Once both browser and AS support is confirmed through feature discovery, OAuth clients MAY send parameters **only** in `Redirect-Query`, omitting URL parameters entirely. This:
+- Reduces URL length
+- Prevents any possibility of parameter leakage via URLs
+- Maintains backward compatibility (unsupported browsers fall back to URL parameters)
+
+**Note:** Feature discovery is optional. The incremental deployment model ([Section 7](#7-oauth-incremental-deployment)) works without explicit discovery - authorization servers detect support by receiving `Redirect-Query` headers in requests.
 
 ---
 
-## 8. Implementation Status
+## 10. Implementation Status
 
 **Specification status:** Exploratory draft
 **Browser support:** Not yet implemented (proposed specification)
@@ -276,9 +372,18 @@ Deployment strategy: Backward compatible - clients send both URL and headers dur
 
 ---
 
-## 9. Related Documents
-- [OAuth 2.0 Security Best Current Practice (RFC 9126)](https://tools.ietf.org/rfc/rfc9126.html)  
+## 11. Related Documents
+- [OAuth 2.0 Security Best Current Practice](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics-29)
 - [OAuth 2.0 Threat Model and Security Considerations (RFC 6819)](https://tools.ietf.org/rfc/rfc6819.html)
+- [OAuth-WG Browser-Swapping Discussion](http://www.mail-archive.com/oauth@ietf.org/msg25296.html)
+- [IETF 121 OAuth Meeting Minutes](https://datatracker.ietf.org/doc/minutes-121-oauth-202411040930/)
+- [OAuth 2.0 authentication vulnerabilities](https://portswigger.net/web-security/oauth)
 - [Fetch Metadata Request Headers](https://w3c.github.io/webappsec-fetch-metadata/)
 - [W3C Privacy Principles](https://w3ctag.github.io/privacy-principles/)
 - [Client Hints Infrastructure](https://tools.ietf.org/html/rfc8942)
+
+---
+
+## 12. Acknowledgments
+
+The author would like to thank early reviewers for their valuable feedback and insights that helped shape this proposal.
