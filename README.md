@@ -388,4 +388,4 @@ Deployment strategy: Backward compatible - clients send both URL and headers dur
 
 ## 12. Acknowledgments
 
-The author would like to thank early reviewers for their valuable feedback and insights that helped shape this proposal.
+The author would like to thank early reviewers for their valuable feedback and insights that helped shape this proposal: Jonas Primbs,  Sam Goto, Warren Parad.
