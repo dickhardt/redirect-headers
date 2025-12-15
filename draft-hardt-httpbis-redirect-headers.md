@@ -61,13 +61,13 @@ A third header, **Redirect-Path**, allows servers to request path-specific origi
 
 # Redirect Headers
 
-Two headers work together during top-level 303 (See Other) redirects, with an optional third header for path-specific validation:
+Three headers work together during top-level 303 (See Other) redirects to provide secure parameter passing and mutual authentication:
 
-| Header | Set by | Direction | Purpose |
-|--------|--------|-----------|---------|
-| Redirect-Query | Server | Both directions | Carry parameters without URLs |
-| Redirect-Origin | Browser | Both directions | Verified origin (+ optional path) |
-| Redirect-Path | Server | Server to Browser | Request path-specific origin |
+**Redirect-Query** carries parameters from servers (client applications or authorization servers) to the browser, which then forwards them to the next party. This keeps sensitive data out of URLs while maintaining the redirect flow.
+
+**Redirect-Origin** provides browser-verified origin authentication. The browser sets this header when forwarding redirect parameters, allowing the receiving party to verify where the redirect originated. This cannot be spoofed by scripts or stripped by intermediaries.
+
+**Redirect-Path** (optional) allows servers to request path-specific origin verification for finer-grained validation within an origin.
 
 **Browser behavior:** Only processes these headers during top-level redirects. Ignores them for normal requests or embedded resources.
 
@@ -93,25 +93,6 @@ The Redirect-Origin header provides browser-verified origin authentication. It i
 
 **Format:** Always ends with `/`
 
-```
-Redirect-Origin: "https://app.example/"
-Redirect-Origin: "https://app.example/app1/"  (when Redirect-Path validated)
-```
-
-**Browser behavior:**
-
-The browser sets Redirect-Origin when either Redirect-Query or Redirect-Path is present in the redirect response:
-
-1. **Base case**: Redirect-Origin is set to the origin of the current page plus `/`
-   - Current page: `https://app.example/some/page`
-   - Redirect-Origin: `https://app.example/`
-
-2. **With Redirect-Path**: If the server includes Redirect-Path in the response, the browser validates the path claim:
-   - Server sends: `Redirect-Path: "/app1/"`
-   - Browser checks: Does current page path start with `/app1/`?
-   - If YES: `Redirect-Origin: "https://app.example/app1/"`
-   - If NO: `Redirect-Origin: "https://app.example/"` (path claim rejected)
-
 **Properties:**
 
 - Set ONLY by the browser (cannot be spoofed by scripts or intermediaries)
@@ -119,6 +100,66 @@ The browser sets Redirect-Origin when either Redirect-Query or Redirect-Path is 
 - Provides mutual authentication between parties
 - Always ends with `/` for consistent parsing
 - May include validated path when Redirect-Path is used
+
+**Browser behavior:**
+
+The browser sets Redirect-Origin when either Redirect-Query or Redirect-Path is present in the redirect response.
+
+### Example 1: Origin-only verification (without Redirect-Path)
+
+**Current page:** `https://app.example/some/page`
+
+**Server sends redirect:**
+```
+HTTP/1.1 303 See Other
+Location: https://as.example/authorize
+Redirect-Query: "client_id=abc&state=123"
+```
+
+**Browser forwards to AS:**
+```
+GET /authorize
+Host: as.example
+Redirect-Origin: "https://app.example/"
+Redirect-Query: "client_id=abc&state=123"
+```
+
+The Redirect-Origin is set to the origin plus `/`, without any path component.
+
+### Example 2: Origin+path verification (with Redirect-Path)
+
+**Current page:** `https://app.example/app1/some/page`
+
+**Server sends redirect:**
+```
+HTTP/1.1 303 See Other
+Location: https://as.example/authorize
+Redirect-Query: "client_id=abc&state=123"
+Redirect-Path: "/app1/"
+```
+
+**Browser validates path claim:**
+- Redirect-Path claim: `/app1/`
+- Current page path: `/app1/some/page`
+- Validation: Does `/app1/some/page` start with `/app1/`? ✓ YES
+
+**Browser forwards to AS:**
+```
+GET /authorize
+Host: as.example
+Redirect-Origin: "https://app.example/app1/"
+Redirect-Query: "client_id=abc&state=123"
+```
+
+The Redirect-Origin includes the validated path `/app1/` because the browser confirmed the current page is within that path.
+
+**If path validation fails:**
+
+If the current page was `https://app.example/app2/page` and the server claimed `Redirect-Path: "/app1/"`, the browser would reject the path claim and send only the origin:
+
+```
+Redirect-Origin: "https://app.example/"
+```
 
 ## Redirect-Path
 
@@ -142,26 +183,6 @@ The server includes Redirect-Path in the redirect response when it wants the rec
 4. If invalid: Ignore the path claim, use origin only: `Redirect-Origin: "https://example.com/"`
 
 This mechanism prevents path manipulation attacks where an attacker might try to redirect from an unexpected path within the same origin. The server cannot lie about its path because the browser enforces validation.
-
-# Use Cases
-
-**Primary: OAuth and OpenID Connect**
-
-- Authorization code flow
-- Implicit flow (though deprecated)
-- Hybrid flows
-
-**Other authentication protocols:**
-
-- SAML assertions
-- Proprietary SSO flows
-- Any protocol requiring browser-mediated parameter passing
-
-**When NOT to use:**
-
-- Public, non-sensitive parameters that can appear in URLs
-- Server-to-server communication (no browser involved)
-- Protocols that don't use browser redirects
 
 # OAuth Redirect Security Threats
 
@@ -246,9 +267,28 @@ Result: Once all three support it → authorization code sent in header, not URL
 
 **No coordination required** - each party adds support independently, and the system naturally converges to the secure behavior once all three support it. The client can immediately start sending both, browsers simply forward headers, and authorization servers detect support from incoming requests.
 
+# Use Cases
+
+**Primary: OAuth and OpenID Connect**
+
+- Authorization code flow
+- Implicit flow (though deprecated)
+- Hybrid flows
+
+**Other authentication protocols:**
+
+- SAML assertions
+- Proprietary SSO flows
+- Any protocol requiring browser-mediated parameter passing
+
+**When NOT to use:**
+
+- Server-to-server communication (no browser involved)
+- Protocols that don't use browser redirects
+
 # Feature Discovery
 
-Protocols may optionally use Client Hints [@!RFC8942] to discover browser support for Redirect Headers before relying on them. While not required for security (backward compatibility ensures graceful fallback), feature discovery can optimize behavior by allowing clients to send parameters only in headers, omitting URL parameters entirely.
+Some protocols may wish to discover browser support for Redirect Headers using Client Hints [@!RFC8942].
 
 **Server advertises support:**
 ```
@@ -260,7 +300,7 @@ Accept-CH: Redirect-Supported
 Redirect-Supported: ?1
 ```
 
-**Note:** Feature discovery is optional. The incremental deployment model works without explicit discovery - authorization servers detect support by receiving Redirect-Query headers in requests.
+**Note:** Feature discovery is optional and not required for OAuth flows. The incremental deployment model works without explicit discovery - authorization servers detect support by receiving Redirect-Query headers in requests.
 
 # Security Considerations
 
