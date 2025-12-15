@@ -276,24 +276,107 @@ Once both browser and AS support is confirmed through feature discovery, OAuth c
 
 # Security Considerations
 
-**Security:**
+## Header Confidentiality
 
-- Redirect-Query contains sensitive data - servers MUST treat as confidential
-- Browsers MUST prevent JavaScript from reading or setting redirect headers
-- Redirect-Path supplements but does NOT replace redirect_uri validation
-- Network middleboxes (proxies, load balancers) can still observe headers
-- Defense assumes honest browser (cannot protect against browser compromise)
-- Transition period: URLs still leak until clients stop sending URL parameters
+Redirect-Query carries sensitive parameters (authorization codes, tokens, session identifiers) that MUST be protected with the same care as credentials. Servers MUST:
+
+- Configure logging systems to exclude or redact Redirect-Query header values
+- Treat Redirect-Query with the same confidentiality as Authorization headers
+- Use TLS for all redirects carrying Redirect-Query to prevent network observation
+
+Network intermediaries (proxies, load balancers, CDNs) can observe header values in transit. Deployment environments with untrusted intermediaries require additional protection beyond this specification.
+
+## Browser Implementation Requirements
+
+Browsers MUST enforce strict isolation of Redirect headers:
+
+- JavaScript MUST NOT be able to read or set Redirect-* headers via any API
+- Browser extensions MUST NOT have access to Redirect-* headers
+- Only the browser's redirect handling mechanism can create or consume these headers
+- Headers MUST only be processed during top-level navigation redirects, never for subresource requests
+
+Failure to enforce these restrictions would allow malicious scripts to forge origin claims or steal sensitive parameters.
+
+## Origin Verification Limits
+
+Redirect-Origin provides browser-mediated mutual authentication but has limitations:
+
+- It verifies the browser's understanding of origin, not the server's identity
+- It does not authenticate the user or establish a secure channel
+- It supplements but does NOT replace redirect_uri validation and registration
+- Servers MUST continue to validate redirect_uri against registered values
+
+Redirect-Path provides additional validation within an origin but cannot prevent attacks where the attacker controls a legitimate path within the same origin.
+
+## Browser Trust Model
+
+This specification assumes an honest browser implementation. It cannot protect against:
+
+- Compromised or malicious browsers
+- Browser bugs that fail to enforce header restrictions
+- Browser extensions with elevated privileges
+- Debugging tools that modify headers
+
+Servers should monitor for anomalous behavior (e.g., Redirect-Origin values that don't match expected patterns) as potential indicators of browser compromise or implementation bugs.
+
+## Transition Period Risks
+
+During incremental deployment, clients may send parameters in both URL and headers for backward compatibility. This dual-sending pattern preserves URL leakage risks until:
+
+- All parties (client, browser, server) support Redirect Headers
+- Clients stop including parameters in URLs
+
+Servers SHOULD detect Redirect-Query presence and warn or reject requests that also include sensitive parameters in URLs, to encourage migration away from URL-based parameters.
 
 # Privacy Considerations
 
-**Privacy:**
+## Reduced URL-Based Tracking
 
-- Authorization codes and tokens removed from browser history
-- No Referer leakage to third-party resources
-- No exposure to JavaScript, browser extensions, or DOM inspection
-- Reduced logging in analytics, crash reports, and server logs
-- User-visible URLs are clean and don't reveal sensitive parameters
+By moving parameters from URLs to headers, this specification reduces several privacy risks:
+
+- Browser history no longer contains sensitive parameters that could be extracted by malware or forensic analysis
+- Referer headers sent to third-party resources no longer leak parameters from the referring page
+- User-visible URLs no longer expose sensitive parameters to shoulder-surfing or screen sharing
+- URLs can be safely shared without risk of exposing authentication state
+
+However, implementers should note that this does not eliminate all tracking vectors - cookies, browser fingerprinting, and other mechanisms remain unaffected.
+
+## Network Observer Privacy
+
+Network intermediaries can still observe Redirect-* headers in transit, just as they can observe URL parameters today. This specification does not enhance privacy against network-level observers (ISPs, proxies, corporate firewalls). TLS remains essential for protecting parameters from network observation.
+
+In some cases, moving parameters to headers may slightly improve privacy: unlike URL paths (which may be visible in TLS SNI or DNS queries), HTTP headers are encrypted by TLS and not visible to passive network observers.
+
+## Redirect-Origin Privacy Implications
+
+Redirect-Origin explicitly reveals the origin (and optionally path) of the redirecting page. Implementers should consider:
+
+- This is similar to the Referer header but more reliable and always present when Redirect-Query is used
+- It enables the receiving party to know definitively where the redirect originated
+- Unlike Referer (which users/tools can strip for privacy), Redirect-Origin cannot be disabled by the user when Redirect-Query is present
+- This trade-off prioritizes security (mutual authentication) over origin hiding
+
+Protocols using Redirect Headers should only be deployed where mutual knowledge of party identities is acceptable and expected (as in OAuth, where the AS and client already know each other).
+
+## User Control and Transparency
+
+Users have limited control over Redirect Headers:
+
+- Users cannot inspect or modify Redirect-* headers (unlike URL parameters which are visible)
+- Users cannot selectively disable Redirect-Origin without breaking functionality
+- Browser developer tools may or may not expose these headers depending on implementation
+
+Browser implementations SHOULD provide visibility into Redirect Headers in developer tools for transparency, while maintaining the security restriction that JavaScript cannot access them.
+
+## Server Logging Practices
+
+While Redirect Headers remove parameters from URLs (reducing accidental logging via URL-based logs), servers must implement appropriate logging controls:
+
+- Configure web servers and load balancers to exclude Redirect-Query from access logs
+- Ensure application logging redacts sensitive header values
+- Be aware that default logging configurations may capture all headers
+
+The shift to headers does not automatically prevent logging - it requires conscious configuration changes.
 
 # IANA Considerations
 
