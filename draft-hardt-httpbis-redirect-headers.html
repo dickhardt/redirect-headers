@@ -1178,14 +1178,6 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
             <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-feature-discovery" class="internal xref">Feature Discovery</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
-                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-using-client-hints" class="internal xref">Using Client Hints</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
-                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-optimization-for-oauth" class="internal xref">Optimization for OAuth</a></p>
-</li>
-            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
             <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
@@ -1238,6 +1230,9 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.3">
                 <p id="section-toc.1-1.9.2.3.1"><a href="#section-9.3" class="auto internal xref">9.3</a>.  <a href="#name-redirect-path-header-field" class="internal xref">Redirect-Path Header Field</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.4">
+                <p id="section-toc.1-1.9.2.4.1"><a href="#section-9.4" class="auto internal xref">9.4</a>.  <a href="#name-redirect-supported-header-f" class="internal xref">Redirect-Supported Header Field</a></p>
 </li>
             </ul>
 </li>
@@ -1622,44 +1617,20 @@ Result: Once all three support it → authorization code sent in header, not URL
       <h2 id="name-feature-discovery">
 <a href="#section-6" class="section-number selfRef">6. </a><a href="#name-feature-discovery" class="section-name selfRef">Feature Discovery</a>
       </h2>
-<p id="section-6-1">Some protocols may wish to explicitly discover browser support for Redirect Headers before relying on them. While not required for security (backward compatibility ensures graceful fallback), feature discovery can optimize behavior.<a href="#section-6-1" class="pilcrow">¶</a></p>
-<div id="using-client-hints">
-<section id="section-6.1">
-        <h3 id="name-using-client-hints">
-<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-using-client-hints" class="section-name selfRef">Using Client Hints</a>
-        </h3>
-<p id="section-6.1-1">Servers can advertise support and request browser capabilities using Client Hints <span>[<a href="#RFC8942" class="cite xref">RFC8942</a>]</span>:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
-<p id="section-6.1-2"><strong>Server advertises support:</strong><a href="#section-6.1-2" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-6.1-3">
+<p id="section-6-1">Protocols may optionally use Client Hints <span>[<a href="#RFC8942" class="cite xref">RFC8942</a>]</span> to discover browser support for Redirect Headers before relying on them. While not required for security (backward compatibility ensures graceful fallback), feature discovery can optimize behavior by allowing clients to send parameters only in headers, omitting URL parameters entirely.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2"><strong>Server advertises support:</strong><a href="#section-6-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6-3">
 <pre>Accept-CH: Redirect-Supported
 
-</pre><a href="#section-6.1-3" class="pilcrow">¶</a>
+</pre><a href="#section-6-3" class="pilcrow">¶</a>
 </div>
-<p id="section-6.1-4"><strong>Browser responds with capability:</strong><a href="#section-6.1-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-6.1-5">
+<p id="section-6-4"><strong>Browser responds with capability:</strong><a href="#section-6-4" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6-5">
 <pre>Redirect-Supported: ?1
 
-</pre><a href="#section-6.1-5" class="pilcrow">¶</a>
+</pre><a href="#section-6-5" class="pilcrow">¶</a>
 </div>
-</section>
-</div>
-<div id="optimization-for-oauth">
-<section id="section-6.2">
-        <h3 id="name-optimization-for-oauth">
-<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-optimization-for-oauth" class="section-name selfRef">Optimization for OAuth</a>
-        </h3>
-<p id="section-6.2-1">Once both browser and AS support is confirmed through feature discovery, OAuth clients MAY send parameters <strong>only</strong> in Redirect-Query, omitting URL parameters entirely. This:<a href="#section-6.2-1" class="pilcrow">¶</a></p>
-<ul class="compact">
-<li class="compact" id="section-6.2-2.1">Reduces URL length<a href="#section-6.2-2.1" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="section-6.2-2.2">Prevents any possibility of parameter leakage via URLs<a href="#section-6.2-2.2" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="section-6.2-2.3">Maintains backward compatibility (unsupported browsers fall back to URL parameters)<a href="#section-6.2-2.3" class="pilcrow">¶</a>
-</li>
-        </ul>
-<p id="section-6.2-3"><strong>Note:</strong> Feature discovery is optional. The incremental deployment model works without explicit discovery - authorization servers detect support by receiving Redirect-Query headers in requests.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
-</section>
-</div>
+<p id="section-6-6"><strong>Note:</strong> Feature discovery is optional. The incremental deployment model works without explicit discovery - authorization servers detect support by receiving Redirect-Query headers in requests.<a href="#section-6-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="security-considerations">
@@ -1849,7 +1820,7 @@ Result: Once all three support it → authorization code sent in header, not URL
       <h2 id="name-iana-considerations">
 <a href="#section-9" class="section-number selfRef">9. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-9-1">This document registers three new HTTP header fields in the "Hypertext Transfer Protocol (HTTP) Field Name Registry" defined in <span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>.<a href="#section-9-1" class="pilcrow">¶</a></p>
+<p id="section-9-1">This document registers four new HTTP header fields in the "Hypertext Transfer Protocol (HTTP) Field Name Registry" defined in <span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>.<a href="#section-9-1" class="pilcrow">¶</a></p>
 <div id="redirect-query-header-field">
 <section id="section-9.1">
         <h3 id="name-redirect-query-header-field">
@@ -1884,6 +1855,19 @@ Result: Once all three support it → authorization code sent in header, not URL
 <p id="section-9.3-3">Status: standard<a href="#section-9.3-3" class="pilcrow">¶</a></p>
 <p id="section-9.3-4">Author/Change controller: IETF<a href="#section-9.3-4" class="pilcrow">¶</a></p>
 <p id="section-9.3-5">Specification document(s): [this document]<a href="#section-9.3-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="redirect-supported-header-field">
+<section id="section-9.4">
+        <h3 id="name-redirect-supported-header-f">
+<a href="#section-9.4" class="section-number selfRef">9.4. </a><a href="#name-redirect-supported-header-f" class="section-name selfRef">Redirect-Supported Header Field</a>
+        </h3>
+<p id="section-9.4-1">Header field name: Redirect-Supported<a href="#section-9.4-1" class="pilcrow">¶</a></p>
+<p id="section-9.4-2">Applicable protocol: http<a href="#section-9.4-2" class="pilcrow">¶</a></p>
+<p id="section-9.4-3">Status: standard<a href="#section-9.4-3" class="pilcrow">¶</a></p>
+<p id="section-9.4-4">Author/Change controller: IETF<a href="#section-9.4-4" class="pilcrow">¶</a></p>
+<p id="section-9.4-5">Specification document(s): [this document]<a href="#section-9.4-5" class="pilcrow">¶</a></p>
+<p id="section-9.4-6">Comments: Client Hint for feature discovery<a href="#section-9.4-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>

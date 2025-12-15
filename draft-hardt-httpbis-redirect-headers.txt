@@ -72,8 +72,6 @@ Table of Contents
      5.1.  How It Works
      5.2.  Adoption Path
    6.  Feature Discovery
-     6.1.  Using Client Hints
-     6.2.  Optimization for OAuth
    7.  Security Considerations
      7.1.  Header Confidentiality
      7.2.  Browser Implementation Requirements
@@ -90,6 +88,7 @@ Table of Contents
      9.1.  Redirect-Query Header Field
      9.2.  Redirect-Origin Header Field
      9.3.  Redirect-Path Header Field
+     9.4.  Redirect-Supported Header Field
    10. Implementation Status
    11. References
      11.1.  Normative References
@@ -404,15 +403,12 @@ Result: Once all three support it → authorization code sent in header, not URL
 
 6.  Feature Discovery
 
-   Some protocols may wish to explicitly discover browser support for
-   Redirect Headers before relying on them.  While not required for
-   security (backward compatibility ensures graceful fallback), feature
-   discovery can optimize behavior.
-
-6.1.  Using Client Hints
-
-   Servers can advertise support and request browser capabilities using
-   Client Hints [RFC8942]:
+   Protocols may optionally use Client Hints [RFC8942] to discover
+   browser support for Redirect Headers before relying on them.  While
+   not required for security (backward compatibility ensures graceful
+   fallback), feature discovery can optimize behavior by allowing
+   clients to send parameters only in headers, omitting URL parameters
+   entirely.
 
    *Server advertises support:*
 
@@ -421,17 +417,6 @@ Result: Once all three support it → authorization code sent in header, not URL
    *Browser responds with capability:*
 
    Redirect-Supported: ?1
-
-6.2.  Optimization for OAuth
-
-   Once both browser and AS support is confirmed through feature
-   discovery, OAuth clients MAY send parameters *only* in Redirect-
-   Query, omitting URL parameters entirely.  This:
-
-   *  Reduces URL length
-   *  Prevents any possibility of parameter leakage via URLs
-   *  Maintains backward compatibility (unsupported browsers fall back
-      to URL parameters)
 
    *Note:* Feature discovery is optional.  The incremental deployment
    model works without explicit discovery - authorization servers detect
@@ -600,9 +585,8 @@ Result: Once all three support it → authorization code sent in header, not URL
 
 9.  IANA Considerations
 
-   This document registers three new HTTP header fields in the
-   "Hypertext Transfer Protocol (HTTP) Field Name Registry" defined in
-   [RFC9110].
+   This document registers four new HTTP header fields in the "Hypertext
+   Transfer Protocol (HTTP) Field Name Registry" defined in [RFC9110].
 
 9.1.  Redirect-Query Header Field
 
@@ -639,6 +623,20 @@ Result: Once all three support it → authorization code sent in header, not URL
    Author/Change controller: IETF
 
    Specification document(s): [this document]
+
+9.4.  Redirect-Supported Header Field
+
+   Header field name: Redirect-Supported
+
+   Applicable protocol: http
+
+   Status: standard
+
+   Author/Change controller: IETF
+
+   Specification document(s): [this document]
+
+   Comments: Client Hint for feature discovery
 
 10.  Implementation Status
 
