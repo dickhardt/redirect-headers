@@ -177,13 +177,13 @@ The Redirect-Origin is set to the origin plus `/`, without any path component.
 HTTP/1.1 303 See Other
 Location: https://as.example/authorize
 Redirect-Query: "client_id=abc&state=123"
-Redirect-Path: "/app1/"
+Redirect-Path: "/app1"
 ```
 
 **Browser validates path claim:**
-- Redirect-Path claim: `/app1/`
+- Redirect-Path claim: `/app1`
 - Current page path: `/app1/some/page`
-- Validation: Does `/app1/some/page` start with `/app1/`? ✓ YES
+- Validation: Does `/app1/some/page` start with `/app1`? ✓ YES
 
 **Browser forwards to AS:**
 ```
@@ -197,7 +197,7 @@ The Redirect-Origin includes the validated path `/app1/` because the browser con
 
 **If path validation fails:**
 
-If the current page was `https://app.example/app2/page` and the server claimed `Redirect-Path: "/app1/"`, the browser would reject the path claim and send only the origin:
+If the current page was `https://app.example/app2/page` and the server claimed `Redirect-Path: "/app1"`, the browser would reject the path claim and send only the origin:
 
 ```
 Redirect-Origin: "https://app.example/"
@@ -207,10 +207,10 @@ Redirect-Origin: "https://app.example/"
 
 The Redirect-Path header allows a server to request path-specific origin verification. It is set by the server in the redirect response as a claim about the current page's path. The browser validates this claim and, if valid, includes the path in Redirect-Origin.
 
-**Format:** Must start and end with `/`
+**Format:** Must start with `/`
 
 ```
-Redirect-Path: "/app1/"
+Redirect-Path: "/app1"
 ```
 
 **Server behavior:**
@@ -219,8 +219,8 @@ The server includes Redirect-Path in the redirect response when it wants the rec
 
 **Browser validation:**
 
-1. Server sends: `Redirect-Path: "/app1/"`
-2. Browser checks: Does the current page path start with `/app1/`?
+1. Server sends: `Redirect-Path: "/app1"`
+2. Browser checks: Does the current page path start with `/app1`?
 3. If valid: Include path in `Redirect-Origin: "https://example.com/app1/"`
 4. If invalid: Ignore the path claim, use origin only: `Redirect-Origin: "https://example.com/"`
 
@@ -550,12 +550,12 @@ Referer: https://as.example/consent
 HTTP/1.1 303 See Other
 Location: https://as.example/authorize
 Redirect-Query: "client_id=abc&state=123&redirect_uri=https://app.example/app1/cb"
-Redirect-Path: "/app1/"
+Redirect-Path: "/app1"
 ```
 
 **Browser validates and adds origin:**
 - Current page: `https://app.example/app1/page`
-- Redirect-Path claim: `/app1/` ✓ (page path starts with `/app1/`)
+- Redirect-Path claim: `/app1` ✓ (page path starts with `/app1`)
 - Sets Redirect-Origin: `https://app.example/app1/`
 
 **Browser navigates, sends to AS:**
