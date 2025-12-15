@@ -1,71 +1,38 @@
 # HTTP Redirect Headers
 
-This repository contains the IETF Internet-Draft for HTTP Redirect Headers.
+This is the working area for the individual Internet-Draft, "HTTP Redirect Headers".
 
-This repository uses the [IETF I-D Template](https://github.com/martinthomson/i-d-template) for building drafts.
-
-## Draft Document
-
-- **Latest draft**: [draft-hardt-httpbis-redirect-headers](draft-hardt-httpbis-redirect-headers.md)
-- **Explainer**: [explainer.md](explainer.md) - Detailed explanation and use cases
+* [Editor's Copy](https://dickhardt.github.io/redirect-headers/draft-hardt-httpbis-redirect-headers.html)
+* [Datatracker Page](https://datatracker.ietf.org/doc/draft-hardt-httpbis-redirect-headers)
+* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-hardt-httpbis-redirect-headers)
+* [Compare Editor's Copy to Individual Draft](https://dickhardt.github.io/redirect-headers/#go.draft-hardt-httpbis-redirect-headers.diff)
 
 ## Abstract
 
-This document defines HTTP headers that enable browsers to pass redirect parameters securely during HTTP redirects without exposing them in URLs. The Redirect-Query header carries parameters traditionally sent via URL query strings, the Redirect-Origin header provides browser-verified origin authentication, and the Redirect-Path header enables path-based redirect validation.
+This document defines HTTP headers that enable browsers to pass redirect parameters securely during HTTP redirects without exposing them in URLs. The Redirect-Query header carries parameters traditionally sent via URL query strings, the Redirect-Origin header provides browser-verified origin authentication, and the Redirect-Path header enables path-based redirect validation. These headers address security and privacy concerns in authentication and authorization protocols such as OAuth 2.0 and OpenID Connect.
 
-## Building the Draft
+## Additional Resources
 
-### First Time Setup
-
-The first time you run `make`, it will automatically clone the i-d-template and install required tools (mmark, xml2rfc, etc.) in a local virtual environment.
-
-### Local Build
-
-Build the draft:
-```bash
-make
-```
-
-View the generated HTML:
-```bash
-open draft-hardt-httpbis-redirect-headers.html
-```
-
-Clean generated files:
-```bash
-make clean
-```
-
-## Automated Builds
-
-GitHub Actions automatically builds the draft on every push to main and publishes to GitHub Pages. The latest rendered version is available at:
-
-https://dickhardt.github.io/redirect-headers/
-
-## Submitting to IETF
-
-When ready to submit a new draft version:
-
-1. Create and push a tag:
-   ```bash
-   git tag -a draft-hardt-httpbis-redirect-headers-00 -m "Version 00"
-   git push origin draft-hardt-httpbis-redirect-headers-00
-   ```
-
-2. GitHub Actions will automatically:
-   - Build the versioned draft
-   - Upload it to the IETF datatracker
-   - Archive it in the repository
-
-## Authors
-
-- Dick Hardt (Hellō) - dick.hardt@hello.coop
-- Sam Goto (Google) - goto@google.com
+* [Explainer Document](explainer.md) - Detailed explanation, use cases, and examples
 
 ## Contributing
 
-This draft is in early development. Feedback and suggestions are welcome via GitHub issues.
+See the [guidelines for contributions](https://github.com/dickhardt/redirect-headers/blob/main/CONTRIBUTING.md).
 
-## License
+Contributions can be made by creating pull requests.
+The GitHub interface supports creating pull requests using the Edit (✏) button.
 
-See [LICENSE](LICENSE) for details.
+## Command Line Usage
+
+Formatted text and HTML versions of the draft can be built using `make`.
+
+```sh
+$ make
+```
+
+Command line usage requires that you have the necessary software installed. See [the instructions](https://github.com/martinthomson/i-d-template/blob/main/doc/SETUP.md).
+
+## Authors
+
+- Dick Hardt (Hellō)
+- Sam Goto (Google)
