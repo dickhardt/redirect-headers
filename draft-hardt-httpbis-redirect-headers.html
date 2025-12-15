@@ -8,7 +8,7 @@
 <meta content="Dick Hardt" name="author">
 <meta content="Sam Goto" name="author">
 <meta content="
-       This document defines HTTP headers that enable browsers to pass redirect parameters securely during HTTP redirects without exposing them in URLs. The Redirect-Query header carries parameters traditionally sent via URL query strings, the Redirect-Origin header provides browser-verified origin authentication, and the Redirect-Path header enables path-based redirect validation. These headers address security and privacy concerns in authentication and authorization protocols such as OAuth 2.0 and OpenID Connect by preventing parameter leakage through browser history, Referer headers, server logs, and analytics systems. 
+       This document defines HTTP headers that enable secure parameter passing and mutual authentication during browser redirects. The Redirect-Query header carries parameters in browser-controlled headers instead of URLs, preventing leakage through browser history, Referer headers, server logs, and analytics systems. The Redirect-Origin header provides browser-verified origin authentication that cannot be spoofed or stripped, enabling reliable mutual authentication between parties. The optional Redirect-Path header allows servers to request path-specific origin verification. Together, these headers address critical security and privacy concerns in authentication and authorization protocols such as OAuth 2.0 and OpenID Connect. 
     " name="description">
 <meta content="xml2rfc 3.31.0" name="generator">
 <meta content="http" name="keyword">
@@ -1087,7 +1087,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <h1 id="title">HTTP Redirect Headers</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This document defines HTTP headers that enable browsers to pass redirect parameters securely during HTTP redirects without exposing them in URLs. The Redirect-Query header carries parameters traditionally sent via URL query strings, the Redirect-Origin header provides browser-verified origin authentication, and the Redirect-Path header enables path-based redirect validation. These headers address security and privacy concerns in authentication and authorization protocols such as OAuth 2.0 and OpenID Connect by preventing parameter leakage through browser history, Referer headers, server logs, and analytics systems.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines HTTP headers that enable secure parameter passing and mutual authentication during browser redirects. The Redirect-Query header carries parameters in browser-controlled headers instead of URLs, preventing leakage through browser history, Referer headers, server logs, and analytics systems. The Redirect-Origin header provides browser-verified origin authentication that cannot be spoofed or stripped, enabling reliable mutual authentication between parties. The optional Redirect-Path header allows servers to request path-specific origin verification. Together, these headers address critical security and privacy concerns in authentication and authorization protocols such as OAuth 2.0 and OpenID Connect.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <div id="status-of-memo">
 <section id="section-boilerplate.1">
