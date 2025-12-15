@@ -61,7 +61,7 @@ A third header, **Redirect-Path**, allows servers to request path-specific origi
 
 # Redirect Headers
 
-Two headers work together during top-level 302/303 redirects, with an optional third header for path-specific validation:
+Two headers work together during top-level 303 (See Other) redirects, with an optional third header for path-specific validation:
 
 | Header | Set by | Direction | Purpose |
 |--------|--------|-----------|---------|
@@ -81,7 +81,7 @@ Redirect-Query: "code=SplxlOBe&state=123"
 
 **Properties:**
 
-- Set by server in HTTP redirect response (302/303)
+- Set by server in HTTP 303 (See Other) redirect response
 - Replaces URL query parameters
 - Parsed using standard URL query string parsing
 - Prevents exposure via browser history, Referer, logs, and analytics
@@ -445,7 +445,7 @@ This appendix provides a detailed comparison of OAuth flows with and without Red
 
 **Client Website returns to Browser:**
 ```
-HTTP/1.1 302 Found
+HTTP/1.1 303 See Other
 Location: https://as.example/authorize?client_id=abc&state=123&redirect_uri=...
 ```
 
@@ -459,7 +459,7 @@ Referer: https://app.example/login
 
 **AS returns code to Browser:**
 ```
-HTTP/1.1 302 Found
+HTTP/1.1 303 See Other
 Location: https://app.example/cb?code=SplxlOBe&state=123
 ```
 ← Leaked in URL
@@ -482,7 +482,7 @@ Referer: https://as.example/consent
 
 **Client Website returns to Browser:**
 ```
-HTTP/1.1 302 Found
+HTTP/1.1 303 See Other
 Location: https://as.example/authorize
 Redirect-Query: "client_id=abc&state=123&redirect_uri=https://app.example/app1/cb"
 Redirect-Path: "/app1/"
@@ -507,7 +507,7 @@ Redirect-Query: "client_id=abc&state=123&redirect_uri=https://app.example/app1/c
 - Verifies Redirect-Origin: `https://app.example/app1/`
 - Verifies redirect_uri starts with: `https://app.example/app1/`
 ```
-HTTP/1.1 302 Found
+HTTP/1.1 303 See Other
 Location: https://app.example/app1/cb
 Redirect-Query: "code=SplxlOBe&state=123"
 ```
