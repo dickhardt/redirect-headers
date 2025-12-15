@@ -200,45 +200,6 @@ Redirect-Supported: ?1
 
 **Note:** Feature discovery is optional and not required for OAuth flows. The incremental deployment model works without explicit discovery - authorization servers detect support by receiving Redirect-Query headers in requests.
 
-# OAuth Redirect Security Threats
-
-**Scope:** Redirect Headers specifically addresses OAuth and OIDC web-based redirect flows between websites where sensitive parameters are passed via URL query strings. This proposal does NOT address form_post mechanisms where data appears in the DOM, as that attack vector requires different mitigations.
-
-## Authorization Code Theft from URL Query Strings
-
-The primary security weakness is in the **authorization server's response** containing the authorization code in the URL query string. When an AS redirects back to the client with ?code=...&state=..., the authorization code is exposed through multiple vectors:
-
-**Known attack vectors:**
-
-1. **Browser history leakage** - Authorization codes stored in browser history can be retrieved by attackers with device access
-   - Reference: OAuth 2.0 Security Best Current Practice [@OAUTH-SECURITY-TOPICS]
-
-2. **Server log exposure** - Authorization codes visible in web server access logs, proxy logs, and load balancer logs
-   - Codes can be extracted in real-time or from archived logs
-
-3. **Referer header leakage** - When the callback page loads third-party resources (images, scripts, analytics), the authorization code leaks via the Referer header
-   - Reference: OAuth 2.0 authentication vulnerabilities [@PORTSWIGGER-OAUTH]
-
-4. **Browser-swapping attacks** - Attackers exploit scenarios where authorization codes leak through shared URLs or when users switch browsers during the flow
-   - Discussion: OAuth-WG Browser-Swapping thread
-
-5. **URL sharing** - Users may inadvertently share URLs containing authorization codes after errors or confusion
-
-6. **Analytics and crash reporting** - Authorization codes captured by analytics systems, error tracking, and monitoring tools
-
-**What Redirect Headers mitigates:**
-
-By moving the authorization code from the URL query string to the Redirect-Query header, **all of these attack vectors are eliminated**. The authorization code never appears in:
-
-- URLs (no browser history exposure)
-- Referer headers (no leakage to third parties)
-- Server logs (when servers are configured to not log sensitive headers)
-- User-visible locations (no accidental sharing)
-
-**Important clarification:**
-
-The security concern is specifically the **authorization server's response** with the authorization code. The **client's authorization request** to the AS (containing client_id, redirect_uri, state) does not have known security concerns from being in the URL, as these parameters are not sensitive credentials. However, moving them to headers provides consistency and reduces URL clutter.
-
 # OAuth Incremental Deployment
 
 Redirect Headers is designed for **incremental adoption** - each party (client, browser, authorization server) can independently add support, with functionality emerging when all parties support it.
@@ -282,6 +243,45 @@ Result: Once all three support it → authorization code sent in header, not URL
 ```
 
 **No coordination required** - each party adds support independently, and the system naturally converges to the secure behavior once all three support it. The client can immediately start sending both, browsers simply forward headers, and authorization servers detect support from incoming requests.
+
+# OAuth Redirect Security Threats
+
+**Scope:** Redirect Headers specifically addresses OAuth and OIDC web-based redirect flows between websites where sensitive parameters are passed via URL query strings. This proposal does NOT address form_post mechanisms where data appears in the DOM, as that attack vector requires different mitigations.
+
+## Authorization Code Theft from URL Query Strings
+
+The primary security weakness is in the **authorization server's response** containing the authorization code in the URL query string. When an AS redirects back to the client with ?code=...&state=..., the authorization code is exposed through multiple vectors:
+
+**Known attack vectors:**
+
+1. **Browser history leakage** - Authorization codes stored in browser history can be retrieved by attackers with device access
+   - Reference: OAuth 2.0 Security Best Current Practice [@OAUTH-SECURITY-TOPICS]
+
+2. **Server log exposure** - Authorization codes visible in web server access logs, proxy logs, and load balancer logs
+   - Codes can be extracted in real-time or from archived logs
+
+3. **Referer header leakage** - When the callback page loads third-party resources (images, scripts, analytics), the authorization code leaks via the Referer header
+   - Reference: OAuth 2.0 authentication vulnerabilities [@PORTSWIGGER-OAUTH]
+
+4. **Browser-swapping attacks** - Attackers exploit scenarios where authorization codes leak through shared URLs or when users switch browsers during the flow
+   - Discussion: OAuth-WG Browser-Swapping thread
+
+5. **URL sharing** - Users may inadvertently share URLs containing authorization codes after errors or confusion
+
+6. **Analytics and crash reporting** - Authorization codes captured by analytics systems, error tracking, and monitoring tools
+
+**What Redirect Headers mitigates:**
+
+By moving the authorization code from the URL query string to the Redirect-Query header, **all of these attack vectors are eliminated**. The authorization code never appears in:
+
+- URLs (no browser history exposure)
+- Referer headers (no leakage to third parties)
+- Server logs (when servers are configured to not log sensitive headers)
+- User-visible locations (no accidental sharing)
+
+**Important clarification:**
+
+The security concern is specifically the **authorization server's response** with the authorization code. The **client's authorization request** to the AS (containing client_id, redirect_uri, state) does not have known security concerns from being in the URL, as these parameters are not sensitive credentials. However, moving them to headers provides consistency and reduces URL clutter.
 
 # Security Considerations
 
