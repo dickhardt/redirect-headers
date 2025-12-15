@@ -69,34 +69,33 @@ Table of Contents
        2.2.2.  Example 2: Origin+path verification (with
                Redirect-Path)
      2.3.  Redirect-Path
-   3.  OAuth Redirect Security Threats
-     3.1.  Authorization Code Theft from URL Query Strings
-   4.  OAuth Incremental Deployment
-     4.1.  How It Works
-     4.2.  Adoption Path
-   5.  Use Cases
-   6.  Feature Discovery
-   7.  Security Considerations
-     7.1.  Header Confidentiality
-     7.2.  Browser Implementation Requirements
-     7.3.  Origin Verification Limits
-     7.4.  Browser Trust Model
-     7.5.  Transition Period Risks
-   8.  Privacy Considerations
-     8.1.  URL History and Referer Leakage
-     8.2.  Network Observer Privacy
-     8.3.  Redirect-Origin Privacy Implications
-     8.4.  User Control and Transparency
-     8.5.  Server Logging Practices
-   9.  IANA Considerations
-     9.1.  Redirect-Query Header Field
-     9.2.  Redirect-Origin Header Field
-     9.3.  Redirect-Path Header Field
-     9.4.  Redirect-Supported Header Field
-   10. Implementation Status
-   11. References
-     11.1.  Normative References
-     11.2.  Informative References
+   3.  Feature Discovery
+   4.  OAuth Redirect Security Threats
+     4.1.  Authorization Code Theft from URL Query Strings
+   5.  OAuth Incremental Deployment
+     5.1.  How It Works
+     5.2.  Adoption Path
+   6.  Security Considerations
+     6.1.  Header Confidentiality
+     6.2.  Browser Implementation Requirements
+     6.3.  Origin Verification Limits
+     6.4.  Browser Trust Model
+     6.5.  Transition Period Risks
+   7.  Privacy Considerations
+     7.1.  URL History and Referer Leakage
+     7.2.  Network Observer Privacy
+     7.3.  Redirect-Origin Privacy Implications
+     7.4.  User Control and Transparency
+     7.5.  Server Logging Practices
+   8.  IANA Considerations
+     8.1.  Redirect-Query Header Field
+     8.2.  Redirect-Origin Header Field
+     8.3.  Redirect-Path Header Field
+     8.4.  Redirect-Supported Header Field
+   9.  Implementation Status
+   10. References
+     10.1.  Normative References
+     10.2.  Informative References
    Appendix A.  OAuth Example: Before and After
      A.1.  Without Redirect Headers (current OAuth)
      A.2.  With Redirect Headers
@@ -301,7 +300,25 @@ Table of Contents
    The server cannot lie about its path because the browser enforces
    validation.
 
-3.  OAuth Redirect Security Threats
+3.  Feature Discovery
+
+   Some protocols may wish to discover browser support for Redirect
+   Headers using Client Hints [RFC8942].
+
+   *Server advertises support:*
+
+   Accept-CH: Redirect-Supported
+
+   *Browser responds with capability:*
+
+   Redirect-Supported: ?1
+
+   *Note:* Feature discovery is optional and not required for OAuth
+   flows.  The incremental deployment model works without explicit
+   discovery - authorization servers detect support by receiving
+   Redirect-Query headers in requests.
+
+4.  OAuth Redirect Security Threats
 
    *Scope:* Redirect Headers specifically addresses OAuth and OIDC web-
    based redirect flows between websites where sensitive parameters are
@@ -309,7 +326,7 @@ Table of Contents
    form_post mechanisms where data appears in the DOM, as that attack
    vector requires different mitigations.
 
-3.1.  Authorization Code Theft from URL Query Strings
+4.1.  Authorization Code Theft from URL Query Strings
 
    The primary security weakness is in the *authorization server's
    response* containing the authorization code in the URL query string.
@@ -369,13 +386,13 @@ Table of Contents
    parameters are not sensitive credentials.  However, moving them to
    headers provides consistency and reduces URL clutter.
 
-4.  OAuth Incremental Deployment
+5.  OAuth Incremental Deployment
 
    Redirect Headers is designed for *incremental adoption* - each party
    (client, browser, authorization server) can independently add
    support, with functionality emerging when all parties support it.
 
-4.1.  How It Works
+5.1.  How It Works
 
    *Clients* can start sending parameters in both locations:
 
@@ -394,7 +411,7 @@ Table of Contents
    *  AS can then send response using *only* Redirect-Query header (no
       URL parameters)
 
-4.2.  Adoption Path
+5.2.  Adoption Path
 
    Each party adds support independently, in any order:
 
@@ -419,46 +436,9 @@ Result: Once all three support it → authorization code sent in header, not URL
    browsers simply forward headers, and authorization servers detect
    support from incoming requests.
 
-5.  Use Cases
+6.  Security Considerations
 
-   *Primary: OAuth and OpenID Connect*
-
-   *  Authorization code flow
-   *  Implicit flow (though deprecated)
-   *  Hybrid flows
-
-   *Other authentication protocols:*
-
-   *  SAML assertions
-   *  Proprietary SSO flows
-   *  Any protocol requiring browser-mediated parameter passing
-
-   *When NOT to use:*
-
-   *  Server-to-server communication (no browser involved)
-   *  Protocols that don't use browser redirects
-
-6.  Feature Discovery
-
-   Some protocols may wish to discover browser support for Redirect
-   Headers using Client Hints [RFC8942].
-
-   *Server advertises support:*
-
-   Accept-CH: Redirect-Supported
-
-   *Browser responds with capability:*
-
-   Redirect-Supported: ?1
-
-   *Note:* Feature discovery is optional and not required for OAuth
-   flows.  The incremental deployment model works without explicit
-   discovery - authorization servers detect support by receiving
-   Redirect-Query headers in requests.
-
-7.  Security Considerations
-
-7.1.  Header Confidentiality
+6.1.  Header Confidentiality
 
    Redirect-Query carries sensitive parameters (authorization codes,
    tokens, session identifiers) that MUST be protected with the same
@@ -476,7 +456,7 @@ Result: Once all three support it → authorization code sent in header, not URL
    intermediaries require additional protection beyond this
    specification.
 
-7.2.  Browser Implementation Requirements
+6.2.  Browser Implementation Requirements
 
    Browsers MUST enforce strict isolation of Redirect headers:
 
@@ -491,7 +471,7 @@ Result: Once all three support it → authorization code sent in header, not URL
    Failure to enforce these restrictions would allow malicious scripts
    to forge origin claims or steal sensitive parameters.
 
-7.3.  Origin Verification Limits
+6.3.  Origin Verification Limits
 
    Redirect-Origin provides browser-mediated mutual authentication but
    has limitations:
@@ -508,7 +488,7 @@ Result: Once all three support it → authorization code sent in header, not URL
    cannot prevent attacks where the attacker controls a legitimate path
    within the same origin.
 
-7.4.  Browser Trust Model
+6.4.  Browser Trust Model
 
    This specification assumes an honest browser implementation.  It
    cannot protect against:
@@ -522,7 +502,7 @@ Result: Once all three support it → authorization code sent in header, not URL
    values that don't match expected patterns) as potential indicators of
    browser compromise or implementation bugs.
 
-7.5.  Transition Period Risks
+6.5.  Transition Period Risks
 
    During incremental deployment, clients may send parameters in both
    URL and headers for backward compatibility.  This dual-sending
@@ -535,9 +515,9 @@ Result: Once all three support it → authorization code sent in header, not URL
    requests that also include sensitive parameters in URLs, to encourage
    migration away from URL-based parameters.
 
-8.  Privacy Considerations
+7.  Privacy Considerations
 
-8.1.  URL History and Referer Leakage
+7.1.  URL History and Referer Leakage
 
    When parameters remain in URLs (as during transition or with non-
    supporting implementations), sensitive data persists in browser
@@ -555,7 +535,7 @@ Result: Once all three support it → authorization code sent in header, not URL
    This specification does not eliminate all tracking vectors - cookies,
    browser fingerprinting, and other mechanisms remain unaffected.
 
-8.2.  Network Observer Privacy
+7.2.  Network Observer Privacy
 
    Network intermediaries can still observe Redirect-* headers in
    transit, just as they can observe URL parameters today.  This
@@ -568,7 +548,7 @@ Result: Once all three support it → authorization code sent in header, not URL
    queries), HTTP headers are encrypted by TLS and not visible to
    passive network observers.
 
-8.3.  Redirect-Origin Privacy Implications
+7.3.  Redirect-Origin Privacy Implications
 
    Redirect-Origin explicitly reveals the origin (and optionally path)
    of the redirecting page.  Implementers should consider:
@@ -587,7 +567,7 @@ Result: Once all three support it → authorization code sent in header, not URL
    knowledge of party identities is acceptable and expected (as in
    OAuth, where the AS and client already know each other).
 
-8.4.  User Control and Transparency
+7.4.  User Control and Transparency
 
    Users have limited control over Redirect Headers:
 
@@ -602,7 +582,7 @@ Result: Once all three support it → authorization code sent in header, not URL
    Headers in developer tools for transparency, while maintaining the
    security restriction that JavaScript cannot access them.
 
-8.5.  Server Logging Practices
+7.5.  Server Logging Practices
 
    While Redirect Headers remove parameters from URLs (reducing
    accidental logging via URL-based logs), servers must implement
@@ -617,12 +597,12 @@ Result: Once all three support it → authorization code sent in header, not URL
    The shift to headers does not automatically prevent logging - it
    requires conscious configuration changes.
 
-9.  IANA Considerations
+8.  IANA Considerations
 
    This document registers four new HTTP header fields in the "Hypertext
    Transfer Protocol (HTTP) Field Name Registry" defined in [RFC9110].
 
-9.1.  Redirect-Query Header Field
+8.1.  Redirect-Query Header Field
 
    Header field name: Redirect-Query
 
@@ -634,7 +614,7 @@ Result: Once all three support it → authorization code sent in header, not URL
 
    Specification document(s): [this document]
 
-9.2.  Redirect-Origin Header Field
+8.2.  Redirect-Origin Header Field
 
    Header field name: Redirect-Origin
 
@@ -646,7 +626,7 @@ Result: Once all three support it → authorization code sent in header, not URL
 
    Specification document(s): [this document]
 
-9.3.  Redirect-Path Header Field
+8.3.  Redirect-Path Header Field
 
    Header field name: Redirect-Path
 
@@ -658,7 +638,7 @@ Result: Once all three support it → authorization code sent in header, not URL
 
    Specification document(s): [this document]
 
-9.4.  Redirect-Supported Header Field
+8.4.  Redirect-Supported Header Field
 
    Header field name: Redirect-Supported
 
@@ -672,7 +652,7 @@ Result: Once all three support it → authorization code sent in header, not URL
 
    Comments: Client Hint for feature discovery
 
-10.  Implementation Status
+9.  Implementation Status
 
    *Note to RFC Editor:* Please remove this section before publication.
 
@@ -691,9 +671,9 @@ Result: Once all three support it → authorization code sent in header, not URL
    Deployment strategy: Backward compatible - clients send both URL and
    headers during transition.
 
-11.  References
+10.  References
 
-11.1.  Normative References
+10.1.  Normative References
 
    [RFC6749]  Hardt, D., Ed., "The OAuth 2.0 Authorization Framework",
               October 2012, <https://www.rfc-editor.org/info/rfc6749>.
@@ -707,7 +687,7 @@ Result: Once all three support it → authorization code sent in header, not URL
               DOI 10.17487/RFC9110, June 2022,
               <https://www.rfc-editor.org/info/rfc9110>.
 
-11.2.  Informative References
+10.2.  Informative References
 
    [OAUTH-SECURITY-TOPICS]
               Lodderstedt, T., Ed., Bradley, J., Labunets, A., and D.
