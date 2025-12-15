@@ -170,34 +170,34 @@ The Redirect-Origin is set to the origin plus `/`, without any path component.
 
 ### Example 2: Origin+path verification (with Redirect-Path)
 
-**Current page:** `https://app.example/app1/some/page`
+**Current page:** `https://app.example/mobile/dashboard`
 
 **Server sends redirect:**
 ```
 HTTP/1.1 303 See Other
 Location: https://as.example/authorize
 Redirect-Query: "client_id=abc&state=123"
-Redirect-Path: "/app1"
+Redirect-Path: "/mobile/"
 ```
 
 **Browser validates path claim:**
-- Redirect-Path claim: `/app1`
-- Current page path: `/app1/some/page`
-- Validation: Does `/app1/some/page` start with `/app1`? ✓ YES
+- Redirect-Path claim: `/mobile/`
+- Current page path: `/mobile/dashboard`
+- Validation: Does `/mobile/dashboard` start with `/mobile/`? ✓ YES
 
 **Browser forwards to AS:**
 ```
 GET /authorize
 Host: as.example
-Redirect-Origin: "https://app.example/app1/"
+Redirect-Origin: "https://app.example/mobile/"
 Redirect-Query: "client_id=abc&state=123"
 ```
 
-The Redirect-Origin includes the validated path `/app1/` because the browser confirmed the current page is within that path.
+The Redirect-Origin includes the validated path `/mobile/` because the browser confirmed the current page is within that path.
 
 **If path validation fails:**
 
-If the current page was `https://app.example/app2/page` and the server claimed `Redirect-Path: "/app1"`, the browser would reject the path claim and send only the origin:
+If the current page was `https://app.example/desktop/page` and the server claimed `Redirect-Path: "/mobile/"`, the browser would reject the path claim and send only the origin:
 
 ```
 Redirect-Origin: "https://app.example/"
@@ -219,9 +219,9 @@ The server includes Redirect-Path in the redirect response when it wants the rec
 
 **Browser validation:**
 
-1. Server sends: `Redirect-Path: "/app1"`
-2. Browser checks: Does the current page path start with `/app1`?
-3. If valid: Include path in `Redirect-Origin: "https://example.com/app1/"`
+1. Server sends: `Redirect-Path: "/api"`
+2. Browser checks: Does the current page path start with `/api`?
+3. If valid: Include path in `Redirect-Origin: "https://example.com/api/"`
 4. If invalid: Ignore the path claim, use origin only: `Redirect-Origin: "https://example.com/"`
 
 This mechanism prevents path manipulation attacks where an attacker might try to redirect from an unexpected path within the same origin. The server cannot lie about its path because the browser enforces validation.
@@ -549,31 +549,31 @@ Referer: https://as.example/consent
 ```
 HTTP/1.1 303 See Other
 Location: https://as.example/authorize
-Redirect-Query: "client_id=abc&state=123&redirect_uri=https://app.example/app1/cb"
-Redirect-Path: "/app1"
+Redirect-Query: "client_id=abc&state=123&redirect_uri=https://app.example/portal/callback"
+Redirect-Path: "/portal/"
 ```
 
 **Browser validates and adds origin:**
-- Current page: `https://app.example/app1/page`
-- Redirect-Path claim: `/app1` ✓ (page path starts with `/app1`)
-- Sets Redirect-Origin: `https://app.example/app1/`
+- Current page: `https://app.example/portal/login`
+- Redirect-Path claim: `/portal/` ✓ (page path starts with `/portal/`)
+- Sets Redirect-Origin: `https://app.example/portal/`
 
 **Browser navigates, sends to AS:**
 ```
 GET /authorize
 Host: as.example
-Redirect-Origin: "https://app.example/app1/"
-Redirect-Query: "client_id=abc&state=123&redirect_uri=https://app.example/app1/cb"
+Redirect-Origin: "https://app.example/portal/"
+Redirect-Query: "client_id=abc&state=123&redirect_uri=https://app.example/portal/callback"
 ```
 ← Browser-supplied origin+path, cannot be spoofed
 ← Parameters not in URL!
 
 **AS validates and returns to Browser:**
-- Verifies Redirect-Origin: `https://app.example/app1/`
-- Verifies redirect_uri starts with: `https://app.example/app1/`
+- Verifies Redirect-Origin: `https://app.example/portal/`
+- Verifies redirect_uri starts with: `https://app.example/portal/`
 ```
 HTTP/1.1 303 See Other
-Location: https://app.example/app1/cb
+Location: https://app.example/portal/callback
 Redirect-Query: "code=SplxlOBe&state=123"
 ```
 ← No parameters in URL!
@@ -582,7 +582,7 @@ Redirect-Query: "code=SplxlOBe&state=123"
 - Current page: `https://as.example/consent`
 - Redirect-Query present → Browser sets Redirect-Origin
 ```
-GET /app1/cb
+GET /portal/callback
 Host: app.example
 Redirect-Origin: "https://as.example/"
 Redirect-Query: "code=SplxlOBe&state=123"
