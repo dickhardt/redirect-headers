@@ -105,10 +105,10 @@ Table of Contents
 1.  Introduction
 
    Authentication and authorization protocols (OAuth [RFC6749], OpenID
-   Connect [OIDC], SAML) use browser redirects to navigate users between
-   applications and authorization servers.  These redirects must carry
-   protocol parameters, which historically appear in URLs or POSTed
-   forms.
+   Connect [OIDC], SAML [SAML]) use browser redirects to navigate users
+   between applications and authorization servers.  These redirects must
+   carry protocol parameters, which historically appear in URLs or
+   POSTed forms.
 
    This document addresses two distinct problems in redirect-based
    protocols:
@@ -702,6 +702,12 @@ Result: Once all three support it → authorization code sent in header, not URL
    [PORTSWIGGER-OAUTH]
               PortSwigger, "OAuth 2.0 authentication vulnerabilities",
               2024, <https://portswigger.net/web-security/oauth>.
+
+   [SAML]     Cantor, S., Kemp, J., Philpott, R., and E. Maler,
+              "Assertions and Protocols for the OASIS Security Assertion
+              Markup Language (SAML) V2.0", March 2005,
+              <http://docs.oasis-open.org/security/saml/v2.0/saml-core-
+              2.0-os.pdf>.
 
 Appendix A.  OAuth Example: Before and After
 
