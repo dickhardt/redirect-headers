@@ -70,11 +70,11 @@ Table of Contents
                Redirect-Path)
      2.3.  Redirect-Path
    3.  Feature Discovery
-   4.  OAuth Redirect Security Threats
-     4.1.  Authorization Code Theft from URL Query Strings
-   5.  OAuth Incremental Deployment
-     5.1.  How It Works
-     5.2.  Adoption Path
+   4.  OAuth Incremental Deployment
+     4.1.  How It Works
+     4.2.  Adoption Path
+   5.  OAuth Redirect Security Threats
+     5.1.  Authorization Code Theft from URL Query Strings
    6.  Security Considerations
      6.1.  Header Confidentiality
      6.2.  Browser Implementation Requirements
@@ -318,7 +318,57 @@ Table of Contents
    discovery - authorization servers detect support by receiving
    Redirect-Query headers in requests.
 
-4.  OAuth Redirect Security Threats
+4.  OAuth Incremental Deployment
+
+   Redirect Headers is designed for *incremental adoption* - each party
+   (client, browser, authorization server) can independently add
+   support, with functionality emerging when all parties support it.
+
+4.1.  How It Works
+
+   *Clients* can start sending parameters in both locations:
+
+   *  URL query string (for backward compatibility)
+   *  Redirect-Query header (signaling support)
+
+   *Browsers* forward Redirect- headers when present:
+
+   *  No special detection needed
+   *  Simply forward the headers during redirects
+
+   *Authorization Servers* detect support and respond accordingly:
+
+   *  If request includes Redirect-Query → AS knows both client and
+      browser support it
+   *  AS can then send response using *only* Redirect-Query header (no
+      URL parameters)
+
+4.2.  Adoption Path
+
+   Each party adds support independently, in any order:
+
+Clients add support
+  ├─ Send params in URL + Redirect-Query
+  └─ Look for response in header, fall back to URL
+
+Browsers add support
+  ├─ Forward Redirect-* headers when present
+  └─ No configuration needed
+
+Authorization Servers add support
+  ├─ Detect support when Redirect-Query received
+  ├─ Confirm: client + browser both support it
+  └─ Send response ONLY in Redirect-Query (omit URL params)
+
+Result: Once all three support it → authorization code sent in header, not URL
+
+   *No coordination required* - each party adds support independently,
+   and the system naturally converges to the secure behavior once all
+   three support it.  The client can immediately start sending both,
+   browsers simply forward headers, and authorization servers detect
+   support from incoming requests.
+
+5.  OAuth Redirect Security Threats
 
    *Scope:* Redirect Headers specifically addresses OAuth and OIDC web-
    based redirect flows between websites where sensitive parameters are
@@ -326,7 +376,7 @@ Table of Contents
    form_post mechanisms where data appears in the DOM, as that attack
    vector requires different mitigations.
 
-4.1.  Authorization Code Theft from URL Query Strings
+5.1.  Authorization Code Theft from URL Query Strings
 
    The primary security weakness is in the *authorization server's
    response* containing the authorization code in the URL query string.
@@ -385,56 +435,6 @@ Table of Contents
    not have known security concerns from being in the URL, as these
    parameters are not sensitive credentials.  However, moving them to
    headers provides consistency and reduces URL clutter.
-
-5.  OAuth Incremental Deployment
-
-   Redirect Headers is designed for *incremental adoption* - each party
-   (client, browser, authorization server) can independently add
-   support, with functionality emerging when all parties support it.
-
-5.1.  How It Works
-
-   *Clients* can start sending parameters in both locations:
-
-   *  URL query string (for backward compatibility)
-   *  Redirect-Query header (signaling support)
-
-   *Browsers* forward Redirect- headers when present:
-
-   *  No special detection needed
-   *  Simply forward the headers during redirects
-
-   *Authorization Servers* detect support and respond accordingly:
-
-   *  If request includes Redirect-Query → AS knows both client and
-      browser support it
-   *  AS can then send response using *only* Redirect-Query header (no
-      URL parameters)
-
-5.2.  Adoption Path
-
-   Each party adds support independently, in any order:
-
-Clients add support
-  ├─ Send params in URL + Redirect-Query
-  └─ Look for response in header, fall back to URL
-
-Browsers add support
-  ├─ Forward Redirect-* headers when present
-  └─ No configuration needed
-
-Authorization Servers add support
-  ├─ Detect support when Redirect-Query received
-  ├─ Confirm: client + browser both support it
-  └─ Send response ONLY in Redirect-Query (omit URL params)
-
-Result: Once all three support it → authorization code sent in header, not URL
-
-   *No coordination required* - each party adds support independently,
-   and the system naturally converges to the secure behavior once all
-   three support it.  The client can immediately start sending both,
-   browsers simply forward headers, and authorization servers detect
-   support from incoming requests.
 
 6.  Security Considerations
 
