@@ -9,7 +9,7 @@ keyword = ["http", "redirect", "oauth", "security", "privacy"]
 [seriesInfo]
 status = "standard"
 name = "Internet-Draft"
-value = "draft-hardt-httpbis-redirect-headers-00"
+value = "draft-hardt-httpbis-redirect-headers-latest"
 stream = "IETF"
 
 date = 2025-12-15T00:00:00Z
