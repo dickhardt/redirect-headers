@@ -1310,7 +1310,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
       <h2 id="name-redirect-headers">
 <a href="#section-2" class="section-number selfRef">2. </a><a href="#name-redirect-headers" class="section-name selfRef">Redirect Headers</a>
       </h2>
-<p id="section-2-1">Two headers work together during top-level 302/303 redirects, with an optional third header for path-specific validation:<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-1">Two headers work together during top-level 303 (See Other) redirects, with an optional third header for path-specific validation:<a href="#section-2-1" class="pilcrow">¶</a></p>
 <table class="center" id="table-1">
         <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
 <thead>
@@ -1356,7 +1356,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </div>
 <p id="section-2.1-3"><strong>Properties:</strong><a href="#section-2.1-3" class="pilcrow">¶</a></p>
 <ul class="compact">
-<li class="compact" id="section-2.1-4.1">Set by server in HTTP redirect response (302/303)<a href="#section-2.1-4.1" class="pilcrow">¶</a>
+<li class="compact" id="section-2.1-4.1">Set by server in HTTP 303 (See Other) redirect response<a href="#section-2.1-4.1" class="pilcrow">¶</a>
 </li>
           <li class="compact" id="section-2.1-4.2">Replaces URL query parameters<a href="#section-2.1-4.2" class="pilcrow">¶</a>
 </li>
@@ -1965,7 +1965,7 @@ Result: Once all three support it → authorization code sent in header, not URL
         </h3>
 <p id="appendix-A.1-1"><strong>Client Website returns to Browser:</strong><a href="#appendix-A.1-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="appendix-A.1-2">
-<pre>HTTP/1.1 302 Found
+<pre>HTTP/1.1 303 See Other
 Location: https://as.example/authorize?client_id=abc&amp;state=123&amp;redirect_uri=...
 
 </pre><a href="#appendix-A.1-2" class="pilcrow">¶</a>
@@ -1981,7 +1981,7 @@ Referer: https://app.example/login
 <p id="appendix-A.1-5">← Unreliable, may be stripped<a href="#appendix-A.1-5" class="pilcrow">¶</a></p>
 <p id="appendix-A.1-6"><strong>AS returns code to Browser:</strong><a href="#appendix-A.1-6" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="appendix-A.1-7">
-<pre>HTTP/1.1 302 Found
+<pre>HTTP/1.1 303 See Other
 Location: https://app.example/cb?code=SplxlOBe&amp;state=123
 
 </pre><a href="#appendix-A.1-7" class="pilcrow">¶</a>
@@ -2013,7 +2013,7 @@ Referer: https://as.example/consent
         </h3>
 <p id="appendix-A.2-1"><strong>Client Website returns to Browser:</strong><a href="#appendix-A.2-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="appendix-A.2-2">
-<pre>HTTP/1.1 302 Found
+<pre>HTTP/1.1 303 See Other
 Location: https://as.example/authorize
 Redirect-Query: "client_id=abc&amp;state=123&amp;redirect_uri=https://app.example/app1/cb"
 Redirect-Path: "/app1/"
@@ -2039,7 +2039,7 @@ Redirect-Query: "client_id=abc&amp;state=123&amp;redirect_uri=https://app.exampl
 - Verifies Redirect-Origin: <code>https://app.example/app1/</code>
 - Verifies redirect_uri starts with: <code>https://app.example/app1/</code><a href="#appendix-A.2-7" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="appendix-A.2-8">
-<pre>HTTP/1.1 302 Found
+<pre>HTTP/1.1 303 See Other
 Location: https://app.example/app1/cb
 Redirect-Query: "code=SplxlOBe&amp;state=123"
 
