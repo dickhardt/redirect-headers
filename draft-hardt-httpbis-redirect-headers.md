@@ -42,76 +42,106 @@ This document defines HTTP headers that enable browsers to pass redirect paramet
 
 Authentication and authorization protocols (OAuth [@!RFC6749], OpenID Connect [@OIDC], SAML) use browser redirects to navigate users between applications and authorization servers. These redirects must carry protocol parameters, which historically appear in URLs or POSTed forms.
 
-Current redirect mechanisms have significant limitations: URL parameters leak sensitive data through browser history, Referer headers, server logs, analytics, and JavaScript access. POST-based redirects expose parameters in DOM form fields and require SameSite=None cookies for cross-site operation. The Referer header is unreliable for origin verification as it may be stripped, rewritten, or removed by privacy tools and enterprise proxies.
+This document addresses two distinct problems in redirect-based protocols:
 
-This document defines three HTTP headers that address these limitations by moving redirect parameters into browser-controlled headers that are not exposed in URLs or the DOM:
+1. **Parameter Leakage**: URL parameters leak sensitive data (authorization codes, tokens, session identifiers) through browser history, Referer headers, server logs, analytics systems, and JavaScript access. POST-based redirects expose parameters in DOM form fields. Both mechanisms make sensitive data visible to unintended parties.
 
-- **Redirect-Query** - Carries parameters traditionally sent via URL query strings
-- **Redirect-Origin** - Provides browser-verified origin authentication
-- **Redirect-Path** - Enables path-based redirect validation
+2. **Origin Verification**: Current mechanisms for verifying the origin of redirects are unreliable. The Referer header may be stripped, rewritten, or removed by privacy tools and enterprise proxies, preventing reliable mutual authentication between parties.
+
+This document defines two HTTP headers that address these problems:
+
+- **Redirect-Query** - Carries parameters in a browser-controlled header instead of URLs, preventing leakage while always being paired with origin verification
+- **Redirect-Origin** - Provides browser-verified origin authentication that cannot be spoofed by scripts or manipulated by intermediaries
+
+A third header, **Redirect-Path**, allows servers to request path-specific origin verification when finer-grained validation is needed.
+
+**Note on independent use**: While origin verification without parameter passing is theoretically possible (server sends Redirect-Path, browser responds with Redirect-Origin), no specific use cases have been identified for this configuration.
 
 **Incremental Deployment:** A key feature of this specification is that deployment does not require coordination between parties. Each party (client application, browser, authorization server) can independently add support for Redirect Headers. Full functionality emerges naturally when all three parties support the mechanism, but partial deployment gracefully degrades to existing URL-based behavior. This allows for organic adoption without requiring synchronized upgrades across the ecosystem.
 
 # Redirect Headers
 
-Three headers work together during top-level 302/303 redirects:
+Two headers work together during top-level 302/303 redirects, with an optional third header for path-specific validation:
 
 | Header | Set by | Direction | Purpose |
 |--------|--------|-----------|---------|
-| Redirect-Query | Server (client or AS) | Both directions | Carry parameters without URLs |
-| Redirect-Origin | Browser | Both directions | Mutual origin authentication |
-| Redirect-Path | Client | Client to AS | Validate redirect_uri path |
+| Redirect-Query | Server | Both directions | Carry parameters without URLs |
+| Redirect-Origin | Browser | Both directions | Verified origin (+ optional path) |
+| Redirect-Path | Server | Server to Browser | Request path-specific origin |
 
 **Browser behavior:** Only processes these headers during top-level redirects. Ignores them for normal requests or embedded resources.
 
 ## Redirect-Query
 
-Carries redirect parameters using URL query string encoding.
+The Redirect-Query header carries redirect parameters using URL query string encoding. It is set by servers (either the client application or authorization server) in redirect responses.
 
 ```
 Redirect-Query: "code=SplxlOBe&state=123"
 ```
 
+**Properties:**
+
+- Set by server in HTTP redirect response (302/303)
 - Replaces URL query parameters
 - Parsed using standard URL query string parsing
 - Prevents exposure via browser history, Referer, logs, and analytics
-- Set by server (client or AS)
+- When present, browser MUST include Redirect-Origin in the subsequent request
 
 ## Redirect-Origin
 
-Browser-supplied origin of the page initiating the redirect.
+The Redirect-Origin header provides browser-verified origin authentication. It is set ONLY by the browser and contains the origin (and optionally path) of the page from which the redirect originated.
+
+**Format:** Always ends with `/`
 
 ```
-Redirect-Origin: "https://app.example"
+Redirect-Origin: "https://app.example/"
+Redirect-Origin: "https://app.example/app1/"  (when Redirect-Path validated)
 ```
+
+**Browser behavior:**
+
+The browser sets Redirect-Origin when either Redirect-Query or Redirect-Path is present in the redirect response:
+
+1. **Base case**: Redirect-Origin is set to the origin of the current page plus `/`
+   - Current page: `https://app.example/some/page`
+   - Redirect-Origin: `https://app.example/`
+
+2. **With Redirect-Path**: If the server includes Redirect-Path in the response, the browser validates the path claim:
+   - Server sends: `Redirect-Path: "/app1/"`
+   - Browser checks: Does current page path start with `/app1/`?
+   - If YES: `Redirect-Origin: "https://app.example/app1/"`
+   - If NO: `Redirect-Origin: "https://app.example/"` (path claim rejected)
 
 **Properties:**
 
-- Set ONLY by the browser (cannot be spoofed by scripts)
-- Enables AS to verify which client initiated the request
-- Enables client to verify response came from correct AS
-- Provides cryptographic mutual authentication (browser-mediated)
+- Set ONLY by the browser (cannot be spoofed by scripts or intermediaries)
+- Enables receiving party to verify the origin of the redirect
+- Provides mutual authentication between parties
+- Always ends with `/` for consistent parsing
+- May include validated path when Redirect-Path is used
 
 ## Redirect-Path
 
-Optional path prefix for additional redirect_uri validation.
+The Redirect-Path header allows a server to request path-specific origin verification. It is set by the server in the redirect response as a claim about the current page's path. The browser validates this claim and, if valid, includes the path in Redirect-Origin.
 
-**Client sets:**
+**Format:** Must start and end with `/`
+
 ```
 Redirect-Path: "/app1/"
 ```
 
-**Browser validates:**
+**Server behavior:**
 
-1. Checks current URL path begins with /app1/
-2. If valid: includes Redirect-Path in request to AS
-3. If invalid: omits header (client cannot lie)
+The server includes Redirect-Path in the redirect response when it wants the receiving party to know not just the origin, but also a specific path within that origin.
 
-**AS enforces:**
+**Browser validation:**
 
-- redirect_uri MUST begin with Redirect-Origin + Redirect-Path
+1. Server sends: `Redirect-Path: "/app1/"`
+2. Browser checks: Does the current page path start with `/app1/`?
+3. If valid: Include path in `Redirect-Origin: "https://example.com/app1/"`
+4. If invalid: Ignore the path claim, use origin only: `Redirect-Origin: "https://example.com/"`
 
-This prevents redirect_uri manipulation attacks within the same origin.
+This mechanism prevents path manipulation attacks where an attacker might try to redirect from an unexpected path within the same origin. The server cannot lie about its path because the browser enforces validation.
 
 # Use Cases
 
@@ -371,39 +401,48 @@ Referer: https://as.example/consent
 **Client Website returns to Browser:**
 ```
 HTTP/1.1 302 Found
-Location: https://as.example/authorize?client_id=abc&state=123
-Redirect-Query: "client_id=abc&state=123"
+Location: https://as.example/authorize
+Redirect-Query: "client_id=abc&state=123&redirect_uri=https://app.example/app1/cb"
 Redirect-Path: "/app1/"
 ```
 
-**Browser navigates, adds origin and forwards to AS:**
+**Browser validates and adds origin:**
+- Current page: `https://app.example/app1/page`
+- Redirect-Path claim: `/app1/` ✓ (page path starts with `/app1/`)
+- Sets Redirect-Origin: `https://app.example/app1/`
+
+**Browser navigates, sends to AS:**
 ```
-GET /authorize?client_id=abc&state=123
+GET /authorize
 Host: as.example
-Redirect-Origin: "https://app.example"
-Redirect-Path: "/app1/"
-Redirect-Query: "client_id=abc&state=123"
+Redirect-Origin: "https://app.example/app1/"
+Redirect-Query: "client_id=abc&state=123&redirect_uri=https://app.example/app1/cb"
 ```
-← Browser-supplied, cannot be spoofed
+← Browser-supplied origin+path, cannot be spoofed
+← Parameters not in URL!
 
 **AS validates and returns to Browser:**
+- Verifies Redirect-Origin: `https://app.example/app1/`
+- Verifies redirect_uri starts with: `https://app.example/app1/`
 ```
 HTTP/1.1 302 Found
-Location: https://app.example/cb
+Location: https://app.example/app1/cb
 Redirect-Query: "code=SplxlOBe&state=123"
 ```
 ← No parameters in URL!
 
 **Browser forwards back to Client Website:**
+- Current page: `https://as.example/consent`
+- Redirect-Query present → Browser sets Redirect-Origin
 ```
-GET /cb
+GET /app1/cb
 Host: app.example
-Redirect-Origin: "https://as.example"
+Redirect-Origin: "https://as.example/"
 Redirect-Query: "code=SplxlOBe&state=123"
 ```
 ← Clean URL
-← Client verifies this
-← Not in URL, history, or Referer
+← Client verifies Redirect-Origin is `https://as.example/`
+← Authorization code not in URL, history, or Referer
 
 **Benefits:**
 
