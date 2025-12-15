@@ -42,33 +42,15 @@ This document defines HTTP headers that enable browsers to pass redirect paramet
 
 Authentication and authorization protocols (OAuth [@!RFC6749], OpenID Connect [@OIDC], SAML) use browser redirects to navigate users between applications and authorization servers. These redirects must carry protocol parameters, which historically appear in URLs or POSTed forms.
 
-**Problem:** URLs leak sensitive data through browser history, Referer headers, server logs, analytics, and JavaScript access.
+Current redirect mechanisms have significant limitations: URL parameters leak sensitive data through browser history, Referer headers, server logs, analytics, and JavaScript access. POST-based redirects expose parameters in DOM form fields and require SameSite=None cookies for cross-site operation. The Referer header is unreliable for origin verification as it may be stripped, rewritten, or removed by privacy tools and enterprise proxies.
 
-**Solution:** Redirect Headers move parameters into browser-controlled HTTP headers that aren't exposed in URLs or the DOM.
+This document defines three HTTP headers that address these limitations by moving redirect parameters into browser-controlled headers that are not exposed in URLs or the DOM:
 
-## Problems with Existing Redirect Mechanisms
+- **Redirect-Query** - Carries parameters traditionally sent via URL query strings
+- **Redirect-Origin** - Provides browser-verified origin authentication
+- **Redirect-Path** - Enables path-based redirect validation
 
-### URL-based redirects
-
-- Parameters appear in the URL
-- URLs enter browser history
-- URLs are visible to scripts and extensions
-- URLs leak via the Referer header
-- URLs are logged in servers, proxies, analytics, crash reporting
-
-### POST redirects
-
-- Parameters appear in DOM form fields
-- Visible to JavaScript
-- POST bodies may be logged or inspected
-- Cross-site POST requires SameSite=None cookies
-
-### Referer is unreliable
-
-- May be stripped, rewritten, or truncated
-- May be removed by privacy tools and enterprise proxies
-
-Redirect Headers solve these limitations.
+**Incremental Deployment:** A key feature of this specification is that deployment does not require coordination between parties. Each party (client application, browser, authorization server) can independently add support for Redirect Headers. Full functionality emerges naturally when all three parties support the mechanism, but partial deployment gracefully degrades to existing URL-based behavior. This allows for organic adoption without requiring synchronized upgrades across the ecosystem.
 
 # Redirect Headers
 
@@ -189,97 +171,6 @@ By moving the authorization code from the URL query string to the Redirect-Query
 **Important clarification:**
 
 The security concern is specifically the **authorization server's response** with the authorization code. The **client's authorization request** to the AS (containing client_id, redirect_uri, state) does not have known security concerns from being in the URL, as these parameters are not sensitive credentials. However, moving them to headers provides consistency and reduces URL clutter.
-
-# OAuth Example: Before and After
-
-## Without Redirect Headers (current OAuth)
-
-**Client Website returns to Browser:**
-```
-HTTP/1.1 302 Found
-Location: https://as.example/authorize?client_id=abc&state=123&redirect_uri=...
-```
-
-**Browser navigates, sends to AS:**
-```
-GET /authorize?client_id=abc&state=123&redirect_uri=...
-Host: as.example
-Referer: https://app.example/login
-```
-← Unreliable, may be stripped
-
-**AS returns code to Browser:**
-```
-HTTP/1.1 302 Found
-Location: https://app.example/cb?code=SplxlOBe&state=123
-```
-← Leaked in URL
-
-**Browser sends code to Client Website:**
-```
-GET /cb?code=SplxlOBe&state=123
-Host: app.example
-Referer: https://as.example/consent
-```
-← In browser history, logs, analytics
-← Third-party resources see code via Referer
-
-**Problems:**
-
-- Authorization code appears in URL (history, logs, Referer, extensions)
-- No cryptographic origin verification (Referer is optional and unreliable)
-
-## With Redirect Headers
-
-**Client Website returns to Browser:**
-```
-HTTP/1.1 302 Found
-Location: https://as.example/authorize?client_id=abc&state=123
-Redirect-Query: "client_id=abc&state=123"
-Redirect-Path: "/app1/"
-```
-
-**Browser navigates, adds origin and forwards to AS:**
-```
-GET /authorize?client_id=abc&state=123
-Host: as.example
-Redirect-Origin: "https://app.example"
-Redirect-Path: "/app1/"
-Redirect-Query: "client_id=abc&state=123"
-```
-← Browser-supplied, cannot be spoofed
-
-**AS validates and returns to Browser:**
-```
-HTTP/1.1 302 Found
-Location: https://app.example/cb
-Redirect-Query: "code=SplxlOBe&state=123"
-```
-← No parameters in URL!
-
-**Browser forwards back to Client Website:**
-```
-GET /cb
-Host: app.example
-Redirect-Origin: "https://as.example"
-Redirect-Query: "code=SplxlOBe&state=123"
-```
-← Clean URL
-← Client verifies this
-← Not in URL, history, or Referer
-
-**Benefits:**
-
-- Authorization code never appears in URLs
-- Mutual origin authentication (browser-verified)
-- Backward compatible (browsers/servers without support fall back to URL parameters)
-
-**Requirements:**
-
-- If Redirect-Query received in request: AS MUST use Redirect-Query for response
-- Client MUST verify Redirect-Origin matches expected AS
-- AS MUST verify Redirect-Origin matches expected client
-- When Redirect-Query is present, client MUST ignore URL parameters and use only header parameters
 
 # OAuth Incremental Deployment
 
@@ -433,6 +324,99 @@ This specification requires:
 Deployment strategy: Backward compatible - clients send both URL and headers during transition.
 
 {backmatter}
+
+# OAuth Example: Before and After
+
+This appendix provides a detailed comparison of OAuth flows with and without Redirect Headers to illustrate the differences in security and functionality.
+
+## Without Redirect Headers (current OAuth)
+
+**Client Website returns to Browser:**
+```
+HTTP/1.1 302 Found
+Location: https://as.example/authorize?client_id=abc&state=123&redirect_uri=...
+```
+
+**Browser navigates, sends to AS:**
+```
+GET /authorize?client_id=abc&state=123&redirect_uri=...
+Host: as.example
+Referer: https://app.example/login
+```
+← Unreliable, may be stripped
+
+**AS returns code to Browser:**
+```
+HTTP/1.1 302 Found
+Location: https://app.example/cb?code=SplxlOBe&state=123
+```
+← Leaked in URL
+
+**Browser sends code to Client Website:**
+```
+GET /cb?code=SplxlOBe&state=123
+Host: app.example
+Referer: https://as.example/consent
+```
+← In browser history, logs, analytics
+← Third-party resources see code via Referer
+
+**Problems:**
+
+- Authorization code appears in URL (history, logs, Referer, extensions)
+- No cryptographic origin verification (Referer is optional and unreliable)
+
+## With Redirect Headers
+
+**Client Website returns to Browser:**
+```
+HTTP/1.1 302 Found
+Location: https://as.example/authorize?client_id=abc&state=123
+Redirect-Query: "client_id=abc&state=123"
+Redirect-Path: "/app1/"
+```
+
+**Browser navigates, adds origin and forwards to AS:**
+```
+GET /authorize?client_id=abc&state=123
+Host: as.example
+Redirect-Origin: "https://app.example"
+Redirect-Path: "/app1/"
+Redirect-Query: "client_id=abc&state=123"
+```
+← Browser-supplied, cannot be spoofed
+
+**AS validates and returns to Browser:**
+```
+HTTP/1.1 302 Found
+Location: https://app.example/cb
+Redirect-Query: "code=SplxlOBe&state=123"
+```
+← No parameters in URL!
+
+**Browser forwards back to Client Website:**
+```
+GET /cb
+Host: app.example
+Redirect-Origin: "https://as.example"
+Redirect-Query: "code=SplxlOBe&state=123"
+```
+← Clean URL
+← Client verifies this
+← Not in URL, history, or Referer
+
+**Benefits:**
+
+- Authorization code never appears in URLs
+- Mutual origin authentication (browser-verified)
+- Backward compatible (browsers/servers without support fall back to URL parameters)
+
+**Requirements:**
+
+- If Redirect-Query received in request: AS MUST use Redirect-Query for response
+- Client MUST verify Redirect-Origin matches expected AS
+- AS MUST verify Redirect-Origin matches expected client
+- When Redirect-Query is present, client MUST ignore URL parameters and use only header parameters
 
 # Acknowledgments
 
