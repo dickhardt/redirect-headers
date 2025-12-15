@@ -32,6 +32,48 @@ organization = "Google"
 
 %%%
 
+<reference anchor='OIDC' target='https://openid.net/specs/openid-connect-core-1_0.html'>
+  <front>
+    <title>OpenID Connect Core 1.0</title>
+    <author initials='N.' surname='Sakimura' fullname='N. Sakimura'><organization /></author>
+    <author initials='J.' surname='Bradley' fullname='J. Bradley'><organization /></author>
+    <author initials='M.' surname='Jones' fullname='M. Jones'><organization /></author>
+    <author initials='B.' surname='de Medeiros' fullname='B. de Medeiros'><organization /></author>
+    <author initials='C.' surname='Mortimore' fullname='C. Mortimore'><organization /></author>
+    <date year='2014' month='November' />
+  </front>
+</reference>
+
+<reference anchor='SAML' target='http://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf'>
+  <front>
+    <title>Assertions and Protocols for the OASIS Security Assertion Markup Language (SAML) V2.0</title>
+    <author initials='S.' surname='Cantor' fullname='S. Cantor'><organization /></author>
+    <author initials='J.' surname='Kemp' fullname='J. Kemp'><organization /></author>
+    <author initials='R.' surname='Philpott' fullname='R. Philpott'><organization /></author>
+    <author initials='E.' surname='Maler' fullname='E. Maler'><organization /></author>
+    <date year='2005' month='March' />
+  </front>
+</reference>
+
+<reference anchor='OAUTH-SECURITY-TOPICS' target='https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics'>
+  <front>
+    <title>OAuth 2.0 Security Best Current Practice</title>
+    <author initials='T.' surname='Lodderstedt' fullname='T. Lodderstedt' role='editor'><organization /></author>
+    <author initials='J.' surname='Bradley' fullname='J. Bradley'><organization /></author>
+    <author initials='A.' surname='Labunets' fullname='A. Labunets'><organization /></author>
+    <author initials='D.' surname='Fett' fullname='D. Fett'><organization /></author>
+    <date year='2024' month='October' />
+  </front>
+</reference>
+
+<reference anchor='PORTSWIGGER-OAUTH' target='https://portswigger.net/web-security/oauth'>
+  <front>
+    <title>OAuth 2.0 authentication vulnerabilities</title>
+    <author><organization>PortSwigger</organization></author>
+    <date year='2024' />
+  </front>
+</reference>
+
 .# Abstract
 
 This document defines HTTP headers that enable secure parameter passing and mutual authentication during browser redirects. The Redirect-Query header carries parameters in browser-controlled headers instead of URLs, preventing leakage through browser history, Referer headers, server logs, and analytics systems. The Redirect-Origin header provides browser-verified origin authentication that cannot be spoofed or stripped, enabling reliable mutual authentication between parties. The optional Redirect-Path header allows servers to request path-specific origin verification. Together, these headers address critical security and privacy concerns in authentication and authorization protocols such as OAuth 2.0 and OpenID Connect.
@@ -565,46 +607,4 @@ Redirect-Query: "code=SplxlOBe&state=123"
 # Acknowledgments
 
 The authors would like to thank early reviewers for their valuable feedback and insights that helped shape this proposal: Jonas Primbs, Warren Parad.
-
-<reference anchor='OIDC' target='https://openid.net/specs/openid-connect-core-1_0.html'>
-  <front>
-    <title>OpenID Connect Core 1.0</title>
-    <author initials='N.' surname='Sakimura' fullname='N. Sakimura'><organization /></author>
-    <author initials='J.' surname='Bradley' fullname='J. Bradley'><organization /></author>
-    <author initials='M.' surname='Jones' fullname='M. Jones'><organization /></author>
-    <author initials='B.' surname='de Medeiros' fullname='B. de Medeiros'><organization /></author>
-    <author initials='C.' surname='Mortimore' fullname='C. Mortimore'><organization /></author>
-    <date year='2014' month='November' />
-  </front>
-</reference>
-
-<reference anchor='SAML' target='http://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf'>
-  <front>
-    <title>Assertions and Protocols for the OASIS Security Assertion Markup Language (SAML) V2.0</title>
-    <author initials='S.' surname='Cantor' fullname='S. Cantor'><organization /></author>
-    <author initials='J.' surname='Kemp' fullname='J. Kemp'><organization /></author>
-    <author initials='R.' surname='Philpott' fullname='R. Philpott'><organization /></author>
-    <author initials='E.' surname='Maler' fullname='E. Maler'><organization /></author>
-    <date year='2005' month='March' />
-  </front>
-</reference>
-
-<reference anchor='OAUTH-SECURITY-TOPICS' target='https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics'>
-  <front>
-    <title>OAuth 2.0 Security Best Current Practice</title>
-    <author initials='T.' surname='Lodderstedt' fullname='T. Lodderstedt' role='editor'><organization /></author>
-    <author initials='J.' surname='Bradley' fullname='J. Bradley'><organization /></author>
-    <author initials='A.' surname='Labunets' fullname='A. Labunets'><organization /></author>
-    <author initials='D.' surname='Fett' fullname='D. Fett'><organization /></author>
-    <date year='2024' month='October' />
-  </front>
-</reference>
-
-<reference anchor='PORTSWIGGER-OAUTH' target='https://portswigger.net/web-security/oauth'>
-  <front>
-    <title>OAuth 2.0 authentication vulnerabilities</title>
-    <author><organization>PortSwigger</organization></author>
-    <date year='2024' />
-  </front>
-</reference>
 
