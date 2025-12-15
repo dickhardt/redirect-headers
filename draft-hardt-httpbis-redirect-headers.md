@@ -184,6 +184,22 @@ The server includes Redirect-Path in the redirect response when it wants the rec
 
 This mechanism prevents path manipulation attacks where an attacker might try to redirect from an unexpected path within the same origin. The server cannot lie about its path because the browser enforces validation.
 
+# Feature Discovery
+
+Some protocols may wish to discover browser support for Redirect Headers using Client Hints [@!RFC8942].
+
+**Server advertises support:**
+```
+Accept-CH: Redirect-Supported
+```
+
+**Browser responds with capability:**
+```
+Redirect-Supported: ?1
+```
+
+**Note:** Feature discovery is optional and not required for OAuth flows. The incremental deployment model works without explicit discovery - authorization servers detect support by receiving Redirect-Query headers in requests.
+
 # OAuth Redirect Security Threats
 
 **Scope:** Redirect Headers specifically addresses OAuth and OIDC web-based redirect flows between websites where sensitive parameters are passed via URL query strings. This proposal does NOT address form_post mechanisms where data appears in the DOM, as that attack vector requires different mitigations.
@@ -266,41 +282,6 @@ Result: Once all three support it → authorization code sent in header, not URL
 ```
 
 **No coordination required** - each party adds support independently, and the system naturally converges to the secure behavior once all three support it. The client can immediately start sending both, browsers simply forward headers, and authorization servers detect support from incoming requests.
-
-# Use Cases
-
-**Primary: OAuth and OpenID Connect**
-
-- Authorization code flow
-- Implicit flow (though deprecated)
-- Hybrid flows
-
-**Other authentication protocols:**
-
-- SAML assertions
-- Proprietary SSO flows
-- Any protocol requiring browser-mediated parameter passing
-
-**When NOT to use:**
-
-- Server-to-server communication (no browser involved)
-- Protocols that don't use browser redirects
-
-# Feature Discovery
-
-Some protocols may wish to discover browser support for Redirect Headers using Client Hints [@!RFC8942].
-
-**Server advertises support:**
-```
-Accept-CH: Redirect-Supported
-```
-
-**Browser responds with capability:**
-```
-Redirect-Supported: ?1
-```
-
-**Note:** Feature discovery is optional and not required for OAuth flows. The incremental deployment model works without explicit discovery - authorization servers detect support by receiving Redirect-Query headers in requests.
 
 # Security Considerations
 
