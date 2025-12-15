@@ -248,11 +248,7 @@ Result: Once all three support it → authorization code sent in header, not URL
 
 # Feature Discovery
 
-Some protocols may wish to explicitly discover browser support for Redirect Headers before relying on them. While not required for security (backward compatibility ensures graceful fallback), feature discovery can optimize behavior.
-
-## Using Client Hints
-
-Servers can advertise support and request browser capabilities using Client Hints [@!RFC8942]:
+Protocols may optionally use Client Hints [@!RFC8942] to discover browser support for Redirect Headers before relying on them. While not required for security (backward compatibility ensures graceful fallback), feature discovery can optimize behavior by allowing clients to send parameters only in headers, omitting URL parameters entirely.
 
 **Server advertises support:**
 ```
@@ -263,14 +259,6 @@ Accept-CH: Redirect-Supported
 ```
 Redirect-Supported: ?1
 ```
-
-## Optimization for OAuth
-
-Once both browser and AS support is confirmed through feature discovery, OAuth clients MAY send parameters **only** in Redirect-Query, omitting URL parameters entirely. This:
-
-- Reduces URL length
-- Prevents any possibility of parameter leakage via URLs
-- Maintains backward compatibility (unsupported browsers fall back to URL parameters)
 
 **Note:** Feature discovery is optional. The incremental deployment model works without explicit discovery - authorization servers detect support by receiving Redirect-Query headers in requests.
 
@@ -379,7 +367,7 @@ The shift to headers does not automatically prevent logging - it requires consci
 
 # IANA Considerations
 
-This document registers three new HTTP header fields in the "Hypertext Transfer Protocol (HTTP) Field Name Registry" defined in [@!RFC9110].
+This document registers four new HTTP header fields in the "Hypertext Transfer Protocol (HTTP) Field Name Registry" defined in [@!RFC9110].
 
 ## Redirect-Query Header Field
 
@@ -416,6 +404,20 @@ Status: standard
 Author/Change controller: IETF
 
 Specification document(s): [this document]
+
+## Redirect-Supported Header Field
+
+Header field name: Redirect-Supported
+
+Applicable protocol: http
+
+Status: standard
+
+Author/Change controller: IETF
+
+Specification document(s): [this document]
+
+Comments: Client Hint for feature discovery
 
 # Implementation Status
 
