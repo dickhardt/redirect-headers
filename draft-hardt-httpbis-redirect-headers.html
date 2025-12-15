@@ -1394,32 +1394,32 @@ Redirect-Query: "client_id=abc&amp;state=123"
           <h4 id="name-example-2-originpath-verifi">
 <a href="#section-2.2.2" class="section-number selfRef">2.2.2. </a><a href="#name-example-2-originpath-verifi" class="section-name selfRef">Example 2: Origin+path verification (with Redirect-Path)</a>
           </h4>
-<p id="section-2.2.2-1"><strong>Current page:</strong> <code>https://app.example/app1/some/page</code><a href="#section-2.2.2-1" class="pilcrow">¶</a></p>
+<p id="section-2.2.2-1"><strong>Current page:</strong> <code>https://app.example/mobile/dashboard</code><a href="#section-2.2.2-1" class="pilcrow">¶</a></p>
 <p id="section-2.2.2-2"><strong>Server sends redirect:</strong><a href="#section-2.2.2-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-2.2.2-3">
 <pre>HTTP/1.1 303 See Other
 Location: https://as.example/authorize
 Redirect-Query: "client_id=abc&amp;state=123"
-Redirect-Path: "/app1"
+Redirect-Path: "/mobile/"
 
 </pre><a href="#section-2.2.2-3" class="pilcrow">¶</a>
 </div>
 <p id="section-2.2.2-4"><strong>Browser validates path claim:</strong>
-- Redirect-Path claim: <code>/app1</code>
-- Current page path: <code>/app1/some/page</code>
-- Validation: Does <code>/app1/some/page</code> start with <code>/app1</code>? ✓ YES<a href="#section-2.2.2-4" class="pilcrow">¶</a></p>
+- Redirect-Path claim: <code>/mobile/</code>
+- Current page path: <code>/mobile/dashboard</code>
+- Validation: Does <code>/mobile/dashboard</code> start with <code>/mobile/</code>? ✓ YES<a href="#section-2.2.2-4" class="pilcrow">¶</a></p>
 <p id="section-2.2.2-5"><strong>Browser forwards to AS:</strong><a href="#section-2.2.2-5" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-2.2.2-6">
 <pre>GET /authorize
 Host: as.example
-Redirect-Origin: "https://app.example/app1/"
+Redirect-Origin: "https://app.example/mobile/"
 Redirect-Query: "client_id=abc&amp;state=123"
 
 </pre><a href="#section-2.2.2-6" class="pilcrow">¶</a>
 </div>
-<p id="section-2.2.2-7">The Redirect-Origin includes the validated path <code>/app1/</code> because the browser confirmed the current page is within that path.<a href="#section-2.2.2-7" class="pilcrow">¶</a></p>
+<p id="section-2.2.2-7">The Redirect-Origin includes the validated path <code>/mobile/</code> because the browser confirmed the current page is within that path.<a href="#section-2.2.2-7" class="pilcrow">¶</a></p>
 <p id="section-2.2.2-8"><strong>If path validation fails:</strong><a href="#section-2.2.2-8" class="pilcrow">¶</a></p>
-<p id="section-2.2.2-9">If the current page was <code>https://app.example/app2/page</code> and the server claimed <code>Redirect-Path: "/app1"</code>, the browser would reject the path claim and send only the origin:<a href="#section-2.2.2-9" class="pilcrow">¶</a></p>
+<p id="section-2.2.2-9">If the current page was <code>https://app.example/desktop/page</code> and the server claimed <code>Redirect-Path: "/mobile/"</code>, the browser would reject the path claim and send only the origin:<a href="#section-2.2.2-9" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-2.2.2-10">
 <pre>Redirect-Origin: "https://app.example/"
 
@@ -1445,11 +1445,11 @@ Redirect-Query: "client_id=abc&amp;state=123"
 <p id="section-2.3-5">The server includes Redirect-Path in the redirect response when it wants the receiving party to know not just the origin, but also a specific path within that origin.<a href="#section-2.3-5" class="pilcrow">¶</a></p>
 <p id="section-2.3-6"><strong>Browser validation:</strong><a href="#section-2.3-6" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="compact type-1" id="section-2.3-7">
-<li id="section-2.3-7.1">Server sends: <code>Redirect-Path: "/app1"</code><a href="#section-2.3-7.1" class="pilcrow">¶</a>
+<li id="section-2.3-7.1">Server sends: <code>Redirect-Path: "/api"</code><a href="#section-2.3-7.1" class="pilcrow">¶</a>
 </li>
-          <li id="section-2.3-7.2">Browser checks: Does the current page path start with <code>/app1</code>?<a href="#section-2.3-7.2" class="pilcrow">¶</a>
+          <li id="section-2.3-7.2">Browser checks: Does the current page path start with <code>/api</code>?<a href="#section-2.3-7.2" class="pilcrow">¶</a>
 </li>
-          <li id="section-2.3-7.3">If valid: Include path in <code>Redirect-Origin: "https://example.com/app1/"</code><a href="#section-2.3-7.3" class="pilcrow">¶</a>
+          <li id="section-2.3-7.3">If valid: Include path in <code>Redirect-Origin: "https://example.com/api/"</code><a href="#section-2.3-7.3" class="pilcrow">¶</a>
 </li>
           <li id="section-2.3-7.4">If invalid: Ignore the path claim, use origin only: <code>Redirect-Origin: "https://example.com/"</code><a href="#section-2.3-7.4" class="pilcrow">¶</a>
 </li>
@@ -1980,32 +1980,32 @@ Referer: https://as.example/consent
 <div class="alignLeft art-text artwork" id="appendix-A.2-2">
 <pre>HTTP/1.1 303 See Other
 Location: https://as.example/authorize
-Redirect-Query: "client_id=abc&amp;state=123&amp;redirect_uri=https://app.example/app1/cb"
-Redirect-Path: "/app1"
+Redirect-Query: "client_id=abc&amp;state=123&amp;redirect_uri=https://app.example/portal/callback"
+Redirect-Path: "/portal/"
 
 </pre><a href="#appendix-A.2-2" class="pilcrow">¶</a>
 </div>
 <p id="appendix-A.2-3"><strong>Browser validates and adds origin:</strong>
-- Current page: <code>https://app.example/app1/page</code>
-- Redirect-Path claim: <code>/app1</code> ✓ (page path starts with <code>/app1</code>)
-- Sets Redirect-Origin: <code>https://app.example/app1/</code><a href="#appendix-A.2-3" class="pilcrow">¶</a></p>
+- Current page: <code>https://app.example/portal/login</code>
+- Redirect-Path claim: <code>/portal/</code> ✓ (page path starts with <code>/portal/</code>)
+- Sets Redirect-Origin: <code>https://app.example/portal/</code><a href="#appendix-A.2-3" class="pilcrow">¶</a></p>
 <p id="appendix-A.2-4"><strong>Browser navigates, sends to AS:</strong><a href="#appendix-A.2-4" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="appendix-A.2-5">
 <pre>GET /authorize
 Host: as.example
-Redirect-Origin: "https://app.example/app1/"
-Redirect-Query: "client_id=abc&amp;state=123&amp;redirect_uri=https://app.example/app1/cb"
+Redirect-Origin: "https://app.example/portal/"
+Redirect-Query: "client_id=abc&amp;state=123&amp;redirect_uri=https://app.example/portal/callback"
 
 </pre><a href="#appendix-A.2-5" class="pilcrow">¶</a>
 </div>
 <p id="appendix-A.2-6">← Browser-supplied origin+path, cannot be spoofed
 ← Parameters not in URL!<a href="#appendix-A.2-6" class="pilcrow">¶</a></p>
 <p id="appendix-A.2-7"><strong>AS validates and returns to Browser:</strong>
-- Verifies Redirect-Origin: <code>https://app.example/app1/</code>
-- Verifies redirect_uri starts with: <code>https://app.example/app1/</code><a href="#appendix-A.2-7" class="pilcrow">¶</a></p>
+- Verifies Redirect-Origin: <code>https://app.example/portal/</code>
+- Verifies redirect_uri starts with: <code>https://app.example/portal/</code><a href="#appendix-A.2-7" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="appendix-A.2-8">
 <pre>HTTP/1.1 303 See Other
-Location: https://app.example/app1/cb
+Location: https://app.example/portal/callback
 Redirect-Query: "code=SplxlOBe&amp;state=123"
 
 </pre><a href="#appendix-A.2-8" class="pilcrow">¶</a>
@@ -2015,7 +2015,7 @@ Redirect-Query: "code=SplxlOBe&amp;state=123"
 - Current page: <code>https://as.example/consent</code>
 - Redirect-Query present → Browser sets Redirect-Origin<a href="#appendix-A.2-10" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="appendix-A.2-11">
-<pre>GET /app1/cb
+<pre>GET /portal/callback
 Host: app.example
 Redirect-Origin: "https://as.example/"
 Redirect-Query: "code=SplxlOBe&amp;state=123"
