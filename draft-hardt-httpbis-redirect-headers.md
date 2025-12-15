@@ -566,14 +566,6 @@ Redirect-Query: "code=SplxlOBe&state=123"
 
 The authors would like to thank early reviewers for their valuable feedback and insights that helped shape this proposal: Jonas Primbs, Warren Parad.
 
-<reference anchor='RFC6749' target='https://www.rfc-editor.org/info/rfc6749'>
-  <front>
-    <title>The OAuth 2.0 Authorization Framework</title>
-    <author initials='D.' surname='Hardt' fullname='D. Hardt' role='editor'><organization /></author>
-    <date year='2012' month='October' />
-  </front>
-</reference>
-
 <reference anchor='OIDC' target='https://openid.net/specs/openid-connect-core-1_0.html'>
   <front>
     <title>OpenID Connect Core 1.0</title>
