@@ -330,16 +330,15 @@ Servers SHOULD detect Redirect-Query presence and warn or reject requests that a
 
 # Privacy Considerations
 
-## Reduced URL-Based Tracking
+## URL History and Referer Leakage
 
-By moving parameters from URLs to headers, this specification reduces several privacy risks:
+When parameters remain in URLs (as during transition or with non-supporting implementations), sensitive data persists in browser history and may leak via Referer headers. Implementers should consider:
 
-- Browser history no longer contains sensitive parameters that could be extracted by malware or forensic analysis
-- Referer headers sent to third-party resources no longer leak parameters from the referring page
-- User-visible URLs no longer expose sensitive parameters to shoulder-surfing or screen sharing
-- URLs can be safely shared without risk of exposing authentication state
+- Browser history is persistent storage that may be accessed by malware, forensic tools, or unauthorized users with device access
+- Referer headers are sent automatically to third-party resources, potentially leaking parameters to analytics providers, CDNs, or advertisers
+- The transition to headers does not eliminate these risks until all parties stop sending parameters in URLs
 
-However, implementers should note that this does not eliminate all tracking vectors - cookies, browser fingerprinting, and other mechanisms remain unaffected.
+This specification does not eliminate all tracking vectors - cookies, browser fingerprinting, and other mechanisms remain unaffected.
 
 ## Network Observer Privacy
 
