@@ -40,7 +40,7 @@ This document defines HTTP headers that enable secure parameter passing and mutu
 
 # Introduction
 
-Authentication and authorization protocols (OAuth [@!RFC6749], OpenID Connect [@OIDC], SAML) use browser redirects to navigate users between applications and authorization servers. These redirects must carry protocol parameters, which historically appear in URLs or POSTed forms.
+Authentication and authorization protocols (OAuth [@!RFC6749], OpenID Connect [@OIDC], SAML [@SAML]) use browser redirects to navigate users between applications and authorization servers. These redirects must carry protocol parameters, which historically appear in URLs or POSTed forms.
 
 This document addresses two distinct problems in redirect-based protocols:
 
@@ -583,6 +583,17 @@ The authors would like to thank early reviewers for their valuable feedback and 
     <author initials='B.' surname='de Medeiros' fullname='B. de Medeiros'><organization /></author>
     <author initials='C.' surname='Mortimore' fullname='C. Mortimore'><organization /></author>
     <date year='2014' month='November' />
+  </front>
+</reference>
+
+<reference anchor='SAML' target='http://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf'>
+  <front>
+    <title>Assertions and Protocols for the OASIS Security Assertion Markup Language (SAML) V2.0</title>
+    <author initials='S.' surname='Cantor' fullname='S. Cantor'><organization /></author>
+    <author initials='J.' surname='Kemp' fullname='J. Kemp'><organization /></author>
+    <author initials='R.' surname='Philpott' fullname='R. Philpott'><organization /></author>
+    <author initials='E.' surname='Maler' fullname='E. Maler'><organization /></author>
+    <date year='2005' month='March' />
   </front>
 </reference>
 
