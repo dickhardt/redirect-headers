@@ -1,0 +1,4 @@
+# Generated IETF draft files
+draft-*.xml
+draft-*.html
+draft-*.txt
