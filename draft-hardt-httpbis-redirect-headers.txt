@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                                 S. Goto
-Expires: 18 June 2026                                             Google
-                                                        15 December 2025
+Expires: 9 July 2026                                              Google
+                                                          5 January 2026
 
 
                          HTTP Redirect Headers
@@ -25,7 +25,15 @@ Abstract
    allows servers to request path-specific origin verification.
    Together, these headers address critical security and privacy
    concerns in authentication and authorization protocols such as OAuth
-   2.0 and OpenID Connect.
+   2.0, OpenID Connect, and SAML.
+
+Discussion Venues
+
+   _Note: This section is to be removed before publishing as an RFC._
+
+   Source for this draft and an issue tracker can be found at
+   https://github.com/dickhardt/redirect-headers
+   (https://github.com/dickhardt/redirect-headers).
 
 Status of This Memo
 
@@ -42,11 +50,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 18 June 2026.
+   This Internet-Draft will expire on 9 July 2026.
 
 Copyright Notice
 
-   Copyright (c) 2025 IETF Trust and the persons identified as the
+   Copyright (c) 2026 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -154,9 +162,8 @@ Table of Contents
 
 2.  Redirect Headers
 
-   Three headers work together during top-level 303 (See Other)
-   redirects to provide secure parameter passing and mutual
-   authentication:
+   Three headers work together during top-level 303 redirects to provide
+   secure parameter passing and mutual authentication:
 
    *Redirect-Query* carries parameters from servers (client applications
    or authorization servers) to the browser, which then forwards them to
@@ -184,7 +191,7 @@ Table of Contents
 
    *Properties:*
 
-   *  Set by server in HTTP 303 (See Other) redirect response
+   *  Set by server in HTTP 303 redirect response
    *  Replaces URL query parameters
    *  Parsed using standard URL query string parsing
    *  Prevents exposure via browser history, Referer, logs, and
@@ -347,20 +354,20 @@ Table of Contents
 
    Each party adds support independently, in any order:
 
-Clients add support
-  ├─ Send params in URL + Redirect-Query
-  └─ Look for response in header, fall back to URL
+   *Clients* add support by sending parameters in both the URL query
+   string and the Redirect-Query header, and by looking for responses in
+   the header while falling back to URL parameters.
 
-Browsers add support
-  ├─ Forward Redirect-* headers when present
-  └─ No configuration needed
+   *Browsers* add support by forwarding Redirect-* headers when present
+   during redirects.  No configuration is needed.
 
-Authorization Servers add support
-  ├─ Detect support when Redirect-Query received
-  ├─ Confirm: client + browser both support it
-  └─ Send response ONLY in Redirect-Query (omit URL params)
+   *Authorization Servers* add support by detecting when Redirect-Query
+   is received (confirming that both the client and browser support it),
+   then sending responses using only the Redirect-Query header and
+   omitting URL parameters.
 
-Result: Once all three support it → authorization code sent in header, not URL
+   *Result:* Once all three parties support it, the authorization code
+   is sent in the header rather than the URL.
 
    *No coordination required* - each party adds support independently,
    and the system naturally converges to the secure behavior once all
@@ -388,8 +395,7 @@ Result: Once all three support it → authorization code sent in header, not URL
    1.  *Browser history leakage* - Authorization codes stored in browser
        history can be retrieved by attackers with device access
 
-       *  Reference: OAuth 2.0 Security Best Current Practice
-          [OAUTH-SECURITY-TOPICS]
+       *  Reference: OAuth 2.0 Security Best Current Practice [RFC9700]
 
    2.  *Server log exposure* - Authorization codes visible in web server
        access logs, proxy logs, and load balancer logs
@@ -690,12 +696,6 @@ Result: Once all three support it → authorization code sent in header, not URL
 
 10.2.  Informative References
 
-   [OAUTH-SECURITY-TOPICS]
-              Lodderstedt, T., Ed., Bradley, J., Labunets, A., and D.
-              Fett, "OAuth 2.0 Security Best Current Practice", October
-              2024, <https://datatracker.ietf.org/doc/html/draft-ietf-
-              oauth-security-topics>.
-
    [OIDC]     Sakimura, N., Bradley, J., Jones, M., de Medeiros, B., and
               C. Mortimore, "OpenID Connect Core 1.0", November 2014,
               <https://openid.net/specs/openid-connect-core-1_0.html>.
@@ -703,6 +703,11 @@ Result: Once all three support it → authorization code sent in header, not URL
    [PORTSWIGGER-OAUTH]
               PortSwigger, "OAuth 2.0 authentication vulnerabilities",
               2024, <https://portswigger.net/web-security/oauth>.
+
+   [RFC9700]  Lodderstedt, T., Bradley, J., Labunets, A., and D. Fett,
+              "Best Current Practice for OAuth 2.0 Security", BCP 240,
+              RFC 9700, DOI 10.17487/RFC9700, January 2025,
+              <https://www.rfc-editor.org/info/rfc9700>.
 
    [SAML]     Cantor, S., Kemp, J., Philpott, R., and E. Maler,
               "Assertions and Protocols for the OASIS Security Assertion
@@ -729,14 +734,15 @@ Location: https://as.example/authorize?client_id=abc&state=123&redirect_uri=...
    Host: as.example
    Referer: https://app.example/login
 
-   ← Unreliable, may be stripped
+   The Referer header is unreliable and may be stripped by browsers or
+   proxies.
 
    *AS returns code to Browser:*
 
    HTTP/1.1 303 See Other
    Location: https://app.example/cb?code=SplxlOBe&state=123
 
-   ← Leaked in URL
+   The authorization code is now exposed in the URL.
 
    *Browser sends code to Client Website:*
 
@@ -744,8 +750,9 @@ Location: https://as.example/authorize?client_id=abc&state=123&redirect_uri=...
    Host: app.example
    Referer: https://as.example/consent
 
-   ← In browser history, logs, analytics ← Third-party resources see
-   code via Referer
+   The authorization code is stored in browser history, server logs, and
+   analytics systems.  Third-party resources loaded by this page will
+   receive the code via the Referer header.
 
    *Problems:*
 
@@ -763,10 +770,14 @@ Location: https://as.example/authorize
 Redirect-Query: "client_id=abc&state=123&redirect_uri=https://app.example/portal/callback"
 Redirect-Path: "/portal/"
 
-   *Browser validates and adds origin:* - Current page:
-   https://app.example/portal/login - Redirect-Path claim: /portal/ ✓
-   (page path starts with /portal/) - Sets Redirect-Origin:
-   https://app.example/portal/
+   *Browser validates and adds origin:*
+
+   The browser validates the Redirect-Path claim against the current
+   page URL.  In this example, the current page is
+   https://app.example/portal/login and the Redirect-Path claim is
+   /portal/. Since the page path starts with /portal/, validation
+   succeeds and the browser sets Redirect-Origin to https://app.example/
+   portal/.
 
    *Browser navigates, sends to AS:*
 
@@ -775,30 +786,35 @@ Host: as.example
 Redirect-Origin: "https://app.example/portal/"
 Redirect-Query: "client_id=abc&state=123&redirect_uri=https://app.example/portal/callback"
 
-   ← Browser-supplied origin+path, cannot be spoofed ← Parameters not in
-   URL!
+   The Redirect-Origin is browser-supplied and cannot be spoofed.
+   Parameters are transmitted in headers, not in the URL.
 
-   *AS validates and returns to Browser:* - Verifies Redirect-Origin:
-   https://app.example/portal/ - Verifies redirect_uri starts with:
-   https://app.example/portal/
+   *AS validates and returns to Browser:*
+
+   The AS verifies that Redirect-Origin is https://app.example/portal/
+   and that the redirect_uri starts with https://app.example/portal/.
 
    HTTP/1.1 303 See Other
    Location: https://app.example/portal/callback
    Redirect-Query: "code=SplxlOBe&state=123"
 
-   ← No parameters in URL!
+   The authorization code is transmitted in the header.  No parameters
+   appear in the URL.
 
-   *Browser forwards back to Client Website:* - Current page:
-   https://as.example/consent - Redirect-Query present → Browser sets
-   Redirect-Origin
+   *Browser forwards back to Client Website:*
+
+   The browser is now on the AS consent page at https://as.example/
+   consent.  Since Redirect-Query is present in the response, the
+   browser sets Redirect-Origin to https://as.example/.
 
    GET /portal/callback
    Host: app.example
    Redirect-Origin: "https://as.example/"
    Redirect-Query: "code=SplxlOBe&state=123"
 
-   ← Clean URL ← Client verifies Redirect-Origin is https://as.example/
-   ← Authorization code not in URL, history, or Referer
+   The URL is clean with no query parameters.  The client verifies that
+   Redirect-Origin matches the expected AS.  The authorization code
+   never appears in the URL, browser history, or Referer headers.
 
    *Benefits:*
 
@@ -826,7 +842,7 @@ Authors' Addresses
 
    Dick Hardt
    Hellō
-   Email: dick.hardt@hello.coop
+   Email: dick.hardt@gmail.com
 
 
    Sam Goto
